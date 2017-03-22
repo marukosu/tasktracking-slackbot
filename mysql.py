@@ -68,11 +68,13 @@ class MySQL:
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute("select name, start, end from tasks where uid = %s and start > %s and (end < %s or end is NULL)", (uid, fromTime, toTime))
-     
-        for row in cursor.fetchall():
+        tasklist = cursor.fetchall()
+
+        for row in tasklist:
             print("Name:" + row[0] + "  Start:" + str(row[1]) + "  End:" + str(row[2]))
      
         cursor.close
         conn.close
+        return tasklist
     
  
