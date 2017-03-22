@@ -2,6 +2,7 @@ from slackbot.bot import respond_to     # @botname: で反応するデコーダ
 from slackbot.bot import listen_to      # チャネル内発言で反応するデコーダ
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
 from datetime import datetime, timedelta
+import mysql
 
 #startの挿入
 #bool isok start_task(string user_id, string task_name, timestamp stat_time)
@@ -12,7 +13,7 @@ from datetime import datetime, timedelta
 #ユーザーの登録
 #int ret register(user_id, user_name)
 
-
+db = mysql.MySQL()
 
 #@default_reply()
 #def default_func(message):
@@ -26,7 +27,8 @@ from datetime import datetime, timedelta
 def register_user(message):
     user_id = message.body['user']
     user_name = message.channel._client.users[message.body['user']]['name']
-    #register
+    db.registerUser(user_id, user_name)
+    db.showUsers()
 
 #タスク集計処理(現状"today","yesterday"のみ)
 @respond_to(r"^results_")
