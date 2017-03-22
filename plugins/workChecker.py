@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from slackbot.bot import respond_to     # @botname: で反応するデコーダ
 from slackbot.bot import listen_to      # チャネル内発言で反応するデコーダ
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
@@ -92,6 +93,8 @@ def listen_s(message):
         ss = 0
         time = datetime(y,m,d,hh,mm,ss).strftime('%Y/%m/%d %H:%M:%S')
         db.registerTask(user_id, task_name, time)
+    msg="Add task"
+    message.reply(msg)
 
 #"f_"コマンドの処理
 @listen_to(r"^f_|^e_")

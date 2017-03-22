@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import MySQLdb
  
 class MySQL:
@@ -7,7 +8,8 @@ class MySQL:
                 user='root',
                 passwd='root',
                 host='localhost',
-                db='slack')
+                db='slack',
+                charset='utf8')
         return conn
     
     
