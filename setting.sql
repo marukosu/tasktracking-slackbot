@@ -1,0 +1,21 @@
+## setting sql
+
+# create database slack;
+
+CREATE TABLE users (
+	id   varchar(12) PRIMARY KEY,
+	name varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE tasks (
+	id        int PRIMARY KEY AUTO_INCREMENT,
+	uid       varchar(12),
+	name      varchar(50),
+	start DATETIME NULL,
+	end   DATETIME NULL,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY(uid) REFERENCES users(id),
+	INDEX start_time(start)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
