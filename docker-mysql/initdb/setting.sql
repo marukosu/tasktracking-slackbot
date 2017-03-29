@@ -2,6 +2,8 @@
 
 # create database slack;
 
+use slack;
+
 CREATE TABLE users (
 	id   varchar(12) PRIMARY KEY,
 	name varchar(20) NOT NULL
