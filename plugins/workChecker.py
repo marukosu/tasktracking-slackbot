@@ -5,23 +5,7 @@ from slackbot.bot import default_reply  # 該当する応答がない場合に�
 from datetime import datetime, timedelta
 import mysql
 
-#startの挿入
-#bool isok start_task(string user_id, string task_name, timestamp stat_time)
-#finishの挿入
-#int error_code finish_task(string user_id, string task_name, timestamp finish_time)
-#指定範囲の時刻のタスクリスト取得
-#task[] records get_tasks_by_time_range(string user_id, timestamp start_time, timestamp finish_time)
-#ユーザーの登録
-#int ret register(user_id, user_name)
-
 db = mysql.MySQL()
-
-#@default_reply()
-#def default_func(message):
-#    text = message.body['text']     # メッセージを取り出す
-    # 送信メッセージを作る。改行やトリプルバッククォートで囲む表現も可能
-#    msg = 'yourself'
-#    message.send(msg)      # メンション
 
 #ユーザー登録処理
 @respond_to(r"^register me")
@@ -122,6 +106,7 @@ def listen_f(message):
         ss = 0
         time = datetime(y,m,d,hh,mm,ss).strftime('%Y/%m/%d %H:%M:%S')
         result = db.finishTask(user_id, task_name, time)
+
     if(result == -1):
         message.reply("終了処理が追加できませんでした（userがない，タスク名がない，時刻がおかしい,etc...）")
 
