@@ -16,7 +16,7 @@ def register_user(message):
     db.showUsers()
 
 #タスク集計処理(現状"today","yesterday"のみ)
-@respond_to(r"^out")
+@listen_to(r"^out")
 def get_results(message):
     text = message.body['text']
     splitted = text.split('_')
@@ -93,3 +93,20 @@ def listen_f(message):
         message.reply(task_name + "を終了")
     else:
         message.reply("終了処理が追加できませんでした（userがない，タスク名がない，時刻がおかしい,etc...）")
+
+
+#ユーザー登録処理
+@listen_to("help")
+def show_help(message):
+    commands = [
+        ["@bot register me         ", "コメントしたチャンネルでbotを使うことを宣言する"],
+        ["s_taskname[_time]        ", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
+        ["f_taskname[_time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
+        ["out[_today | _yesterday] ", "その日の登録したタスク一覧を表示"],
+    ]
+    msg = "\n"
+    for c in commands:
+        msg += c[0] + "-- " + c[1] + "\n"
+    message.reply(msg)
+
+
