@@ -95,7 +95,16 @@ def listen_f(message):
         message.reply("終了処理が追加できませんでした（userがない，タスク名がない，時刻がおかしい,etc...）")
 
 
-#ユーザー登録処理
+# 最新の終了していないタスクの表示
+@listen_to("^now")
+def show_current_task(message):
+    uid = message.body['user']
+    task = db.get_current_task(uid)
+    start_time = task[1].strftime('%Y/%m/%d %H:%M:%S')
+    msg = "The latest task is '''" + task[0] + "''',    " + "started at " + start_time
+    message.reply(msg)
+
+# helpの表示
 @listen_to("^help")
 def show_help(message):
     commands = [
