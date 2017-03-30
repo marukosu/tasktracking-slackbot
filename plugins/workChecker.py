@@ -96,7 +96,7 @@ def listen_f(message):
 
 
 #ユーザー登録処理
-@listen_to("help")
+@listen_to("^help")
 def show_help(message):
     commands = [
         ["@bot register me         ", "コメントしたチャンネルでbotを使うことを宣言する"],
