@@ -70,3 +70,14 @@ class MySQL:
         conn.close
         return tasklist
 
+    def get_current_task(self, uid):
+        conn = self.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT name, start FROM tasks WHERE uid = %s AND end IS NULL ORDER BY start DESC LIMIT 1", [uid])
+        task = cursor.fetchone()
+        cursor.close
+        conn.close
+        return task
+
+
+
