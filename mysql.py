@@ -2,7 +2,6 @@
 import MySQLdb
 
 class MySQL:
-
     def connect(self):
         conn = MySQLdb.connect(
                 user='root',
@@ -12,7 +11,7 @@ class MySQL:
                 charset='utf8')
         return conn
 
-    def showUsers(self):
+    def show_users(self):
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute("select id, name from users")
@@ -21,7 +20,7 @@ class MySQL:
         cursor.close
         conn.close
 
-    def registerUser(self, id, name):
+    def register_user(self, id, name):
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute("insert into users (id, name) values (%s, %s) on duplicate key update name = %s", (id, name, name))
@@ -29,7 +28,7 @@ class MySQL:
         cursor.close
         conn.close
 
-    def registerTask(self, uid, taskName, startTime):
+    def register_task(self, uid, taskName, startTime):
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute("insert into tasks (uid, name, start) values (%s, %s, %s)", (uid, taskName, startTime))
@@ -38,7 +37,7 @@ class MySQL:
         cursor.close
         conn.close
 
-    def finishTask(self, uid, taskName, endTime):
+    def finish_task(self, uid, taskName, endTime):
         conn = self.connect()
         cursor = conn.cursor()
 
@@ -58,7 +57,7 @@ class MySQL:
             conn.close
         return 0
 
-    def getTaskList(self, uid, fromTime, toTime):
+    def get_task_list(self, uid, fromTime, toTime):
         conn = self.connect()
         cursor = conn.cursor()
         cursor.execute("select name, start, end from tasks where uid = %s and start > %s and (end < %s or end is NULL)", (uid, fromTime, toTime))
@@ -78,6 +77,4 @@ class MySQL:
         cursor.close
         conn.close
         return task
-
-
 

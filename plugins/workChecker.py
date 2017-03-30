@@ -12,8 +12,8 @@ db = mysql.MySQL()
 def register_user(message):
     user_id = message.body['user']
     user_name = message.channel._client.users[message.body['user']]['name']
-    db.registerUser(user_id, user_name)
-    db.showUsers()
+    db.register_user(user_id, user_name)
+    db.show_users()
 
 #タスク集計処理(現状"today","yesterday"のみ)
 @listen_to(r"^out")
@@ -31,12 +31,12 @@ def get_results(message):
     if(term == "today"):
         start_time = datetime(now.year,now.month,now.day,0,0,0).strftime('%Y/%m/%d %H:%M:%S')
         finish_time = datetime(now.year,now.month,now.day,23,59,59).strftime('%Y/%m/%d %H:%M:%S')
-        tasklist = db.getTaskList(user_id, start_time, finish_time)
+        tasklist = db.get_task_list(user_id, start_time, finish_time)
     elif(term == "yesterday"):
         now = now + timedelta(days=-1)
         start_time = datetime(now.year,now.month,now.day,0,0,0).strftime('%Y/%m/%d %H:%M:%S')
         finish_time = datetime(now.year,now.month,now.day,23,59,59).strftime('%Y/%m/%d %H:%M:%S')
-        tasklist = db.getTaskList(user_id, start_time, finish_time)
+        tasklist = db.get_task_list(user_id, start_time, finish_time)
     else:
         message.reply("Not supported " + term)
 
@@ -62,11 +62,11 @@ def listen_s(message):
 
     if(num == 2 and len(splitted[1]) != 0): #時間指定なしなら投稿の時刻を利用
         time = datetime.fromtimestamp(float(message.body["ts"])).strftime('%Y/%m/%d %H:%M:%S')
-        db.registerTask(user_id, task_name, time)
+        db.register_task(user_id, task_name, time)
     if(num == 3 and len(splitted[2]) != 0): #時間指定ありならlinuxtimestanpに変換して利用
         strtime = splitted[2].split(":")
         time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
-        db.registerTask(user_id, task_name, time)
+        db.register_task(user_id, task_name, time)
 
     message.reply("Add " + task_name)
 
@@ -83,11 +83,11 @@ def listen_f(message):
 
     if(num == 2 and len(splitted[1]) != 0): #時間指定なしなら投稿の時刻を利用
         time = datetime.fromtimestamp(float(message.body["ts"])).strftime('%Y/%m/%d %H:%M:%S')
-        result = db.finishTask(user_id, task_name, time)
+        result = db.finish_task(user_id, task_name, time)
     if(num == 3 and len(splitted[2]) != 0): #時間指定ありならlinuxtimestanpに変換して利用
         strtime = splitted[2].split(":")
         time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
-        result = db.finishTask(user_id, task_name, time)
+        result = db.finish_task(user_id, task_name, time)
 
     if(result == 0):
         message.reply(task_name + "を終了")
@@ -100,8 +100,12 @@ def listen_f(message):
 def show_current_task(message):
     uid = message.body['user']
     task = db.get_current_task(uid)
-    start_time = task[1].strftime('%Y/%m/%d %H:%M:%S')
-    msg = "The latest task is '''" + task[0] + "''',    " + "started at " + start_time
+    msg = ""
+    if(task == None):
+        msg = "There is no task..."
+    else:
+        start_time = task[1].strftime('%Y/%m/%d %H:%M:%S')
+        msg = "The latest task is '''" + task[0] + "''',    " + "started at " + start_time
     message.reply(msg)
 
 # helpの表示
@@ -117,5 +121,4 @@ def show_help(message):
     for c in commands:
         msg += c[0] + "-- " + c[1] + "\n"
     message.reply(msg)
-
 
