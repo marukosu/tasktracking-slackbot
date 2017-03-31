@@ -97,7 +97,7 @@ def listen_f(message):
 
 
 # 最新の終了していないタスクの表示
-@listen_to("^now")
+@listen_to(r"^now")
 def show_current_task(message):
     uid = message.body['user']
     task = db.get_current_task(uid)

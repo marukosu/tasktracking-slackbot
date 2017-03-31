@@ -40,18 +40,14 @@ class MySQL:
 
     def finish_task(self, uid, taskName, endTime):
         conn = self.engine.connect()
-        try:
-            s = text("SELECT id FROM tasks WHERE uid = :u AND name = :n ORDER BY id DESC LIMIT 1")
-            task = conn.execute(s, u=uid, n=taskName).fetchone()
-            if task is None:
-                raise
-            id = task['id']
-            s = text("UPDATE tasks SET end = :e WHERE id = :i")
-            conn.execute(s, e=endTime, i=id)
-        except:
-            import traceback
-            traceback.print_exc()
+        s = text("SELECT id FROM tasks WHERE uid = :u AND name = :n ORDER BY id DESC LIMIT 1")
+        task = conn.execute(s, u=uid, n=taskName).fetchone()
+        if task is None:
             return -1
+        id = task['id']
+        s = text("UPDATE tasks SET end = :e WHERE id = :i")
+        conn.execute(s, e=endTime, i=id)
+
         return 0
 
     def get_task_list(self, uid, fromTime, toTime):
