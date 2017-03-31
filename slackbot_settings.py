@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 
-API_TOKEN = os.environ['PYTHON_SLACKBOT_API_TOKEN']
+API_TOKEN = os.environ['TEST_SLACKBOT_API_TOKEN']
+
 
 PLUGINS = [
     'plugins',
