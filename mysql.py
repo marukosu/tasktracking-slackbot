@@ -1,80 +1,71 @@
 # -*- coding: utf-8 -*-
-import MySQLdb
+from sqlalchemy import create_engine
+from sqlalchemy.sql import text
 
 class MySQL:
-    def connect(self):
-        conn = MySQLdb.connect(
-                user='root',
-                passwd='root',
-                host='localhost',
-                db='slack',
-                charset='utf8')
-        return conn
+    def __init__(self, test):
+        if test == 1:
+            self.engine = create_engine(
+                "mysql://slack:slack@127.0.0.1:13306/slack",
+                encoding='utf-8',
+                echo=True,
+                pool_size=10,
+                pool_recycle=1000,
+            )
+            return
+        self.engine = create_engine(
+            "mysql://root:root@localhost/slack",
+            encoding='utf-8',
+            echo=True,
+            pool_size=10,
+            pool_recycle=1000,
+        )
 
     def show_users(self):
-        conn = self.connect()
-        cursor = conn.cursor()
-        cursor.execute("select id, name from users")
-        for row in cursor.fetchall():
-            print("ID:" + str(row[0]) + "  NAME:" + row[1])
-        cursor.close
-        conn.close
+        conn = self.engine.connect()
+        s = text("SELECT id, name FROM users")
+        rows = conn.execute(s).fetchall()
+        for row in rows:
+            print("ID:" + str(row['id']) + "  NAME:" + row['name'])
 
     def register_user(self, id, name):
-        conn = self.connect()
-        cursor = conn.cursor()
-        cursor.execute("insert into users (id, name) values (%s, %s) on duplicate key update name = %s", (id, name, name))
-        conn.commit()
-        cursor.close
-        conn.close
+        conn = self.engine.connect()
+        s = text("INSERT INTO users (id, name) VALUES (:i, :n) ON DUPLICATE KEY UPDATE name = :n")
+        conn.execute(s, i=id, n=name)
 
     def register_task(self, uid, taskName, startTime):
-        conn = self.connect()
-        cursor = conn.cursor()
-        cursor.execute("insert into tasks (uid, name, start) values (%s, %s, %s)", (uid, taskName, startTime))
-
-        conn.commit()
-        cursor.close
-        conn.close
+        conn = self.engine.connect()
+        s = text("INSERT INTO tasks (uid, name, start) VALUES (:u, :n, :s)")
+        conn.execute(s, u=uid, n=taskName, s=startTime)
 
     def finish_task(self, uid, taskName, endTime):
-        conn = self.connect()
-        cursor = conn.cursor()
-
+        conn = self.engine.connect()
         try:
-            cursor.execute("select id from tasks where uid = %s and name = %s order by id desc limit 1", (uid, taskName))
-            task = cursor.fetchone()
+            s = text("SELECT id FROM tasks WHERE uid = :u AND name = :n ORDER BY id DESC LIMIT 1")
+            task = conn.execute(s, u=uid, n=taskName).fetchone()
             if task is None:
                 raise
-            id = task[0]
-            cursor.execute("update tasks set end = %s where id = %s", (endTime, id))
-            conn.commit()
+            id = task['id']
+            s = text("UPDATE tasks SET end = :e WHERE id = :i")
+            conn.execute(s, e=endTime, i=id)
         except:
-            conn.rollback()
+            import traceback
+            traceback.print_exc()
             return -1
-        finally:
-            cursor.close
-            conn.close
         return 0
 
     def get_task_list(self, uid, fromTime, toTime):
-        conn = self.connect()
-        cursor = conn.cursor()
-        cursor.execute("select name, start, end from tasks where uid = %s and start > %s and (end < %s or end is NULL)", (uid, fromTime, toTime))
-        tasklist = cursor.fetchall()
+        conn = self.engine.connect()
+        s = text("SELECT name, start, end FROM tasks WHERE uid = :u AND start > :f AND (end < :t OR end IS NULL)")
+        tasklist = conn.execute(s, u=uid, f=fromTime, t=toTime).fetchall()
 
         for row in tasklist:
-            print("Name:" + row[0] + "  Start:" + str(row[1]) + "  End:" + str(row[2]))
-        cursor.close
-        conn.close
+            print("Name:" + row['name'] + "  Start:" + str(row['start']) + "  End:" + str(row['end']))
         return tasklist
 
     def get_current_task(self, uid):
-        conn = self.connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT name, start FROM tasks WHERE uid = %s AND end IS NULL ORDER BY start DESC LIMIT 1", [uid])
-        task = cursor.fetchone()
-        cursor.close
-        conn.close
+        conn = self.engine.connect()
+        s = text("SELECT name, start FROM tasks WHERE uid = :u AND end IS NULL ORDER BY start DESC LIMIT 1")
+        task = conn.execute(s, u=uid).fetchone()
         return task
 

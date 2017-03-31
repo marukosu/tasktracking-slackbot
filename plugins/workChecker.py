@@ -5,7 +5,8 @@ from slackbot.bot import default_reply  # 該当する応答がない場合に�
 from datetime import datetime, timedelta
 import mysql
 
-db = mysql.MySQL()
+test_flag = 0
+db = mysql.MySQL(test_flag)
 
 #ユーザー登録処理
 @respond_to(r"^register me")
@@ -43,9 +44,9 @@ def get_results(message):
     msg = "\n"
     workedtime = timedelta(0)
     for row in tasklist:
-        if(row[1] is not None and row[2] is not None):
-            diftime = row[2] - row[1]
-            msg += row[0] + ": " + str(diftime) + "\n"
+        if(row['start'] is not None and row['end'] is not None):
+            diftime = row['end'] - row['start']
+            msg += row['name'] + ": " + str(diftime) + "\n"
             workedtime += diftime
     msg += "today's working time: " + str(workedtime)
     message.reply(msg)
@@ -104,12 +105,12 @@ def show_current_task(message):
     if(task == None):
         msg = "There is no task..."
     else:
-        start_time = task[1].strftime('%Y/%m/%d %H:%M:%S')
-        msg = "The latest task is '''" + task[0] + "''',    " + "started at " + start_time
+        start_time = task['start'].strftime('%Y/%m/%d %H:%M:%S')
+        msg = "The latest task is '''" + task['name'] + "''',    " + "started at " + start_time
     message.reply(msg)
 
 # helpの表示
-@listen_to("^help")
+@listen_to(r"^help")
 def show_help(message):
     commands = [
         ["@bot register me         ", "コメントしたチャンネルでbotを使うことを宣言する"],
