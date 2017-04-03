@@ -40,6 +40,7 @@ def get_results(message):
         tasklist = db.get_task_list(user_id, start_time, finish_time)
     else:
         message.reply("Not supported " + term)
+        return
 
     msg = "\n"
     workedtime = timedelta(0)
