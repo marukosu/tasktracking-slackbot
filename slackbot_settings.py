@@ -8,4 +8,5 @@ PLUGINS = [
     'plugins',
 ]
 
+ERRORS_TO = 'bot_errors'
 default_reply = "This is default message"
