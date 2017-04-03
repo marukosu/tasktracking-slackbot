@@ -3,10 +3,10 @@ from slackbot.bot import respond_to     # @botname: で反応するデコーダ
 from slackbot.bot import listen_to      # チャネル内発言で反応するデコーダ
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
 from datetime import datetime, timedelta
-import mysql
+from plugins.mysql import MySQL
 
-test_flag = 0
-db = mysql.MySQL(test_flag)
+test_flag = 1
+db = MySQL(test_flag)
 
 #ユーザー登録処理
 @respond_to(r"^register me")
