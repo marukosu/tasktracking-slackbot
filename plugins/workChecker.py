@@ -5,7 +5,7 @@ from slackbot.bot import default_reply  # 該当する応答がない場合に�
 from datetime import datetime, timedelta
 from plugins.mysql import MySQL
 
-test_flag = 1
+test_flag = 0
 db = MySQL(test_flag)
 
 #ユーザー登録処理
