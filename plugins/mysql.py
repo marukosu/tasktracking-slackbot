@@ -6,7 +6,7 @@ class MySQL:
     def __init__(self, test):
         if test == 1:
             self.engine = create_engine(
-                "mysql://slack:slack@127.0.0.1:13306/slack",
+                "mysql://slack:slack@127.0.0.1:13306/slack?charset=utf8",
                 encoding='utf-8',
                 echo=True,
                 pool_size=10,
@@ -14,7 +14,7 @@ class MySQL:
             )
             return
         self.engine = create_engine(
-            "mysql://root:root@localhost/slack",
+            "mysql://root:root@localhost/slack?charset=utf8",
             encoding='utf-8',
             echo=True,
             pool_size=10,
