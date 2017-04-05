@@ -17,7 +17,7 @@ def register_user(message):
     db.show_users()
 
 #タスク集計処理(現状"today","yesterday"のみ)
-@listen_to(r"^out")
+@listen_to(r"^sum|^out")
 def get_results(message):
     text = message.body['text']
     splitted = text.split('_')
@@ -34,9 +34,9 @@ def get_results(message):
         finish_time = datetime(now.year,now.month,now.day,23,59,59).strftime('%Y/%m/%d %H:%M:%S')
         tasklist = db.get_task_list(user_id, start_time, finish_time)
     elif(term == "yesterday"):
-        now = now + timedelta(days=-1)
-        start_time = datetime(now.year,now.month,now.day,0,0,0).strftime('%Y/%m/%d %H:%M:%S')
-        finish_time = datetime(now.year,now.month,now.day,23,59,59).strftime('%Y/%m/%d %H:%M:%S')
+        yd = now + timedelta(days=-1)
+        start_time = datetime(yd.year,yd.month,yd.day,0,0,0).strftime('%Y/%m/%d %H:%M:%S')
+        finish_time = datetime(yd.year,yd.month,yd.day,23,59,59).strftime('%Y/%m/%d %H:%M:%S')
         tasklist = db.get_task_list(user_id, start_time, finish_time)
     else:
         message.reply("Not supported " + term)
@@ -117,7 +117,9 @@ def show_help(message):
         ["@bot register me         ", "コメントしたチャンネルでbotを使うことを宣言する"],
         ["s_taskname[_time]        ", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["f_taskname[_time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
-        ["out[_today | _yesterday] ", "その日の登録したタスク一覧を表示"],
+        ["sum[_today | _yesterday] ", "指定した日の登録したタスク一覧を表示"],
+        ["out[_today | _yesterday] ", "指定した日の登録したタスク一覧を表示"],
+        ["now                      ", "直近の終了していなタスクの表示"],
     ]
     msg = "\n"
     for c in commands:
