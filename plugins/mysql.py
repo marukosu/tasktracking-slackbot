@@ -40,7 +40,7 @@ class MySQL:
 
     def finish_task(self, uid, taskName, endTime):
         conn = self.engine.connect()
-        s = text("SELECT id FROM tasks WHERE uid = :u AND name = :n ORDER BY id DESC LIMIT 1")
+        s = text("SELECT id FROM tasks WHERE uid = :u AND name = :n AND end is NULL ORDER BY id DESC LIMIT 1")
         task = conn.execute(s, u=uid, n=taskName).fetchone()
         if task is None:
             return -1
