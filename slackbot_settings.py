@@ -9,4 +9,4 @@ PLUGINS = [
 ]
 
 ERRORS_TO = 'bot_errors'
-default_reply = "This is default message"
+default_reply = "Your message is not supported, please see help(just comment 'help')"
