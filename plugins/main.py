@@ -15,8 +15,23 @@ def register(msg):
     uname = msg.channel._client.users[msg.body['user']]['name']
     ct.register_user(uid, uname)
 
-#タスク集計処理(現状"today","yesterday"のみ)
-@listen_to(r"^sum|^out")
+#タスク一覧
+@listen_to(r"^out")
+def sum(msg):
+    uid = msg.body['user']
+    text = msg.body['text']
+    splitted = text.split('_')
+
+    if len(splitted) < 2:
+        term = "today"
+    else:
+        term = splitted[1]
+
+    ret = ct.out(uid, term)
+    msg.reply(ret)
+
+#タスク集計処理
+@listen_to(r"^sum")
 def sum(msg):
     uid = msg.body['user']
     text = msg.body['text']
@@ -52,14 +67,14 @@ def listen_f(msg):
 
 
 # 最新の終了していないタスクの表示
-@listen_to(r"^now")
+@listen_to(r"^now$")
 def show_current_task(msg):
     uid = msg.body['user']
     ret = ct.show_current_task(uid)
     msg.reply(ret)
 
 # helpの表示
-@listen_to(r"^help")
+@listen_to(r"^help$")
 def show_help(msg):
     commands = [
         ["@bot register me         ", "コメントしたチャンネルでbotを使うことを宣言する"],

@@ -52,7 +52,7 @@ class MySQL:
 
     def get_task_list(self, uid, fromTime, toTime):
         conn = self.engine.connect()
-        s = text("SELECT name, start, end FROM tasks WHERE uid = :u AND start > :f AND (end < :t OR end IS NULL)")
+        s = text("SELECT name, start, end FROM tasks WHERE uid = :u AND end > :f AND (start < :t OR end IS NULL)")
         tasklist = conn.execute(s, u=uid, f=fromTime, t=toTime).fetchall()
 
         for row in tasklist:
