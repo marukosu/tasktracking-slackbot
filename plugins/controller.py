@@ -10,28 +10,69 @@ class Controller:
         self.db.register_user(uid, user_name)
         self.db.show_users()
 
-    def summary(self, uid, term):
+    def term_to_time_duration(self, now, term):
+        # default is "today"
+        st = now
+        finish = datetime(now.year,now.month,now.day,23,59,59)
+
+        if(term == "yesterday"):
+            st = now + timedelta(days=-1)
+        elif(term == "week"):
+            st = now + timedelta(days=-6)
+
+        start = datetime(st.year,st.month,st.day,0,0,0)
+        return (start, finish)
+
+    def get_task_time(self, s, e, rs, re):
+        start = rs
+        end = re
+        # 日付超え対応, start_timeより前だったり、endより後のものはいれない
+        if(rs < s):
+            ## 次の日の0時
+            rs += timedelta(days=+1)
+            start = datetime(rs.year, rs.month, rs.day,0,0,0)
+        if(re > e):
+            ## 前の日の0時1秒前
+            re += timedelta(days=-1)
+            end = datetime(re.year, re.month, re.day,23,59,59)
+
+        return end - start
+
+    def out(self, uid, term):
         now = datetime.now()
-        if(term == "today"):
-            start_time = datetime(now.year,now.month,now.day,0,0,0).strftime('%Y/%m/%d %H:%M:%S')
-            finish_time = datetime(now.year,now.month,now.day,23,59,59).strftime('%Y/%m/%d %H:%M:%S')
-            tasklist = self.db.get_task_list(uid, start_time, finish_time)
-        elif(term == "yesterday"):
-            yd = now + timedelta(days=-1)
-            start_time = datetime(yd.year,yd.month,yd.day,0,0,0).strftime('%Y/%m/%d %H:%M:%S')
-            finish_time = datetime(yd.year,yd.month,yd.day,23,59,59).strftime('%Y/%m/%d %H:%M:%S')
-            tasklist = self.db.get_task_list(uid, start_time, finish_time)
-        else:
-            return "Not supported " + term
+        d = self.term_to_time_duration(now, term)
+        tasklist = self.db.get_task_list(uid, d[0].strftime('%Y/%m/%d %H:%M:%S'), d[1].strftime('%Y/%m/%d %H:%M:%S'))
 
         msg = "\n"
         workedtime = timedelta(0)
         for row in tasklist:
             if(row['start'] is not None and row['end'] is not None):
-                diftime = row['end'] - row['start']
-                msg += row['name'] + ": " + str(diftime) + "\n"
+                diftime = self.get_task_time(d[0], d[1], row['start'], row['end'])
+                msg += row['name'] + ": " + str(diftime) + "\t(" + row['start'].strftime('%m/%d %H:%M') + " ~ " + row['end'].strftime('%m/%d %H:%M') + ")\n"
                 workedtime += diftime
-        msg += "today's working time: " + str(workedtime)
+        msg += term + "'s working time: " + str(workedtime)
+        return msg
+
+    # nameが同じものを集計する
+    def summary(self, uid, term):
+        now = datetime.now()
+        d = self.term_to_time_duration(now, term)
+        tasklist = self.db.get_task_list(uid, d[0], d[1])
+
+        msg = "\n"
+        workedtime = timedelta(0)
+        dict = {}
+        for row in tasklist:
+            if(row['start'] is not None and row['end'] is not None):
+                diftime = self.get_task_time(d[0], d[1], row['start'], row['end'])
+                if(not row['name'] in dict):
+                    dict[row['name']] = diftime
+                else:
+                    dict[row['name']] += diftime
+        for k,v in dict.items():
+            msg += k + ": " + str(v) + "\n"
+            workedtime += v
+        msg += term + "'s working time: " + str(workedtime)
         return msg
 
     def start_task(self, ts, uid, text):
