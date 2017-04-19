@@ -100,10 +100,10 @@ class Controller:
 
         if(num < 2):
             result = -1
-        elif(num == 2): #時間指定なしなら投稿の時刻を利用
+        elif(num == 2 and len(splitted[1]) != 0): #時間指定なしなら投稿の時刻を利用
             time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
             result = self.db.finish_task(uid, task_name, time)
-        elif(num == 3): #時間指定ありならlinuxtimestanpに変換して利用
+        elif(num == 3 and len(splitted[2]) != 0): #時間指定ありならlinuxtimestanpに変換して利用
             strtime = splitted[2].split(":")
             time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
             result = self.db.finish_task(uid, task_name, time)
