@@ -65,6 +65,14 @@ def listen_f(msg):
     ret = ct.finish_task(ts, uid, text)
     msg.reply(ret)
 
+#"end"コマンドの処理
+@listen_to(r"^end$")
+def listen_f(msg):
+    ts = msg.body['ts']
+    uid = msg.body['user']
+
+    ret = ct.finish_current_task(ts, uid)
+    msg.reply(ret)
 
 # 最新の終了していないタスクの表示
 @listen_to(r"^now$")
