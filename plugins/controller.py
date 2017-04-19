@@ -57,10 +57,12 @@ class Controller:
         task_name = splitted[1]
         num = len(splitted)
 
-        if(num == 2 and len(splitted[1]) != 0): #時間指定なしなら投稿の時刻を利用
+        if(num < 2):
+            result = -1
+        elif(num == 2): #時間指定なしなら投稿の時刻を利用
             time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
             result = self.db.finish_task(uid, task_name, time)
-        if(num == 3 and len(splitted[2]) != 0): #時間指定ありならlinuxtimestanpに変換して利用
+        elif(num == 3): #時間指定ありならlinuxtimestanpに変換して利用
             strtime = splitted[2].split(":")
             time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
             result = self.db.finish_task(uid, task_name, time)
@@ -70,8 +72,27 @@ class Controller:
         else:
             return "終了処理が追加できませんでした（userがない，タスク名がない，時刻がおかしい,etc...）"
 
+    def finish_current_task(self, ts, uid):
+        result = -1
+
+        now = datetime.now()
+        l = now + timedelta(hours=-12)
+        limit = datetime(l.year, l.month, l.day, 0, 0, 0).strftime('%Y/%m/%d %H:%M:%S')
+        task = self.db.get_current_task(uid, limit)
+
+        time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
+        result = self.db.finish_task(uid, task['name'], time)
+
+        if(result == 0):
+            return task['name'] + "を終了"
+        else:
+            return "終了処理が追加できませんでした"
+
     def show_current_task(self, uid):
-        task = self.db.get_current_task(uid)
+        now = datetime.now()
+        l = now + timedelta(hours=-12)
+        limit = datetime(l.year, l.month, l.day, 0, 0, 0).strftime('%Y/%m/%d %H:%M:%S')
+        task = self.db.get_current_task(uid, limit)
         if(task == None):
             return "There is no task..."
 

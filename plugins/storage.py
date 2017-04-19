@@ -59,9 +59,9 @@ class MySQL:
             print("Name:" + row['name'] + "  Start:" + str(row['start']) + "  End:" + str(row['end']))
         return tasklist
 
-    def get_current_task(self, uid):
+    def get_current_task(self, uid, limit):
         conn = self.engine.connect()
-        s = text("SELECT name, start FROM tasks WHERE uid = :u AND end IS NULL ORDER BY start DESC LIMIT 1")
-        task = conn.execute(s, u=uid).fetchone()
+        s = text("SELECT name, start FROM tasks WHERE uid = :u AND end IS NULL AND start > :l ORDER BY start DESC LIMIT 1")
+        task = conn.execute(s, u=uid, l=limit).fetchone()
         return task
 
