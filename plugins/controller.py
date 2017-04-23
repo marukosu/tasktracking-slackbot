@@ -13,7 +13,7 @@ class Controller:
     def term_to_time_duration(self, now, term):
         # default is "today"
         st = now
-        finish = datetime(now.year,now.month,now.day,23,59,59)
+        end = datetime(now.year,now.month,now.day,23,59,59)
 
         if(term == "yesterday"):
             st = now + timedelta(days=-1)
@@ -21,7 +21,7 @@ class Controller:
             st = now + timedelta(days=-6)
 
         start = datetime(st.year,st.month,st.day,0,0,0)
-        return (start, finish)
+        return {"start": start, "end": end}
 
     def get_task_time(self, s, e, rs, re):
         start = rs
@@ -38,33 +38,49 @@ class Controller:
 
         return end - start
 
-    def out(self, uid, term):
+    def out(self, uid, text):
+        term = ""
+        splitted = text.split('_')
+
+        if len(splitted) < 2:
+            term = "today"
+        else:
+            term = splitted[1]
+
         now = datetime.now()
         d = self.term_to_time_duration(now, term)
-        tasklist = self.db.get_task_list(uid, d[0].strftime('%Y/%m/%d %H:%M:%S'), d[1].strftime('%Y/%m/%d %H:%M:%S'))
+        tasklist = self.db.get_task_list(uid, d["start"].strftime('%Y/%m/%d %H:%M:%S'), d["end"].strftime('%Y/%m/%d %H:%M:%S'))
 
         msg = "\n"
         workedtime = timedelta(0)
         for row in tasklist:
             if(row['start'] is not None and row['end'] is not None):
-                diftime = self.get_task_time(d[0], d[1], row['start'], row['end'])
+                diftime = self.get_task_time(d["start"], d["end"], row['start'], row['end'])
                 msg += row['name'] + ": " + str(diftime) + "\t(" + row['start'].strftime('%m/%d %H:%M') + " ~ " + row['end'].strftime('%m/%d %H:%M') + ")\n"
                 workedtime += diftime
         msg += term + "'s working time: " + str(workedtime)
         return msg
 
     # nameが同じものを集計する
-    def summary(self, uid, term):
+    def summary(self, uid, text):
+        term = ""
+        splitted = text.split('_')
+
+        if len(splitted) < 2:
+            term = "today"
+        else:
+            term = splitted[1]
+
         now = datetime.now()
         d = self.term_to_time_duration(now, term)
-        tasklist = self.db.get_task_list(uid, d[0], d[1])
+        tasklist = self.db.get_task_list(uid, d["start"], d["end"])
 
         msg = "\n"
         workedtime = timedelta(0)
         dict = {}
         for row in tasklist:
             if(row['start'] is not None and row['end'] is not None):
-                diftime = self.get_task_time(d[0], d[1], row['start'], row['end'])
+                diftime = self.get_task_time(d["start"], d["end"], row['start'], row['end'])
                 if(not row['name'] in dict):
                     dict[row['name']] = diftime
                 else:
@@ -83,11 +99,11 @@ class Controller:
 
         if(num == 2 and len(splitted[1]) != 0): #時間指定なしなら投稿の時刻を利用
             time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
-            self.db.register_task(uid, task_name, time)
         if(num == 3 and len(splitted[2]) != 0): #時間指定ありならlinuxtimestanpに変換して利用
             strtime = splitted[2].split(":")
             time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
-            self.db.register_task(uid, task_name, time)
+
+        self.db.register_task(uid, task_name, time)
 
         return "Add " + task_name
 
@@ -98,15 +114,13 @@ class Controller:
         task_name = splitted[1]
         num = len(splitted)
 
-        if(num < 2):
-            result = -1
-        elif(num == 2 and len(splitted[1]) != 0): #時間指定なしなら投稿の時刻を利用
+        if(num == 2 and len(splitted[1]) != 0): #時間指定なしなら投稿の時刻を利用
             time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
-            result = self.db.finish_task(uid, task_name, time)
         elif(num == 3 and len(splitted[2]) != 0): #時間指定ありならlinuxtimestanpに変換して利用
             strtime = splitted[2].split(":")
             time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
-            result = self.db.finish_task(uid, task_name, time)
+
+        result = self.db.finish_task(uid, task_name, time)
 
         if(result == 0):
             return task_name + "を終了"

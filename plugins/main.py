@@ -20,14 +20,7 @@ def register(msg):
 def sum(msg):
     uid = msg.body['user']
     text = msg.body['text']
-    splitted = text.split('_')
-
-    if len(splitted) < 2:
-        term = "today"
-    else:
-        term = splitted[1]
-
-    ret = ct.out(uid, term)
+    ret = ct.out(uid, text)
     msg.reply(ret)
 
 #タスク集計処理
@@ -35,14 +28,7 @@ def sum(msg):
 def sum(msg):
     uid = msg.body['user']
     text = msg.body['text']
-    splitted = text.split('_')
-
-    if len(splitted) < 2:
-        term = "today"
-    else:
-        term = splitted[1]
-
-    ret = ct.summary(uid, term)
+    ret = ct.summary(uid, text)
     msg.reply(ret)
 
 #"s_"コマンドの処理
@@ -51,7 +37,6 @@ def start(msg):
     ts = msg.body['ts']
     uid = msg.body['user']
     text = msg.body['text']
-
     ret = ct.start_task(ts, uid, text)
     msg.reply(ret)
 
@@ -61,7 +46,6 @@ def listen_f(msg):
     ts = msg.body['ts']
     uid = msg.body['user']
     text = msg.body['text']
-
     ret = ct.finish_task(ts, uid, text)
     msg.reply(ret)
 
@@ -70,7 +54,6 @@ def listen_f(msg):
 def listen_f(msg):
     ts = msg.body['ts']
     uid = msg.body['user']
-
     ret = ct.finish_current_task(ts, uid)
     msg.reply(ret)
 
@@ -88,8 +71,8 @@ def show_help(msg):
         ["@bot register me         ", "コメントしたチャンネルでbotを使うことを宣言する"],
         ["s_taskname[_time]        ", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["f_taskname[_time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
-        ["sum[_today | _yesterday] ", "指定した日の登録したタスク一覧を表示"],
-        ["out[_today | _yesterday] ", "指定した日の登録したタスク一覧を表示"],
+        ["sum[_today | _yesterday | _week] ", "指定した日の登録したタスク一覧を表示"],
+        ["out[_today | _yesterday | _week] ", "指定した日の登録したタスク一覧を表示"],
         ["now                      ", "直近の終了していなタスクの表示"],
     ]
     ret = "\n"
