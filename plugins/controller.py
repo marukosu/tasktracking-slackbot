@@ -38,14 +38,11 @@ class Controller:
 
         return end - start
 
-    def out(self, uid, text):
-        term = ""
-        splitted = text.split('_')
+    def list(self, uid, opt):
+        term = opt.term
 
-        if len(splitted) < 2:
+        if term == '':
             term = "today"
-        else:
-            term = splitted[1]
 
         now = datetime.now()
         d = self.term_to_time_duration(now, term)
@@ -53,30 +50,17 @@ class Controller:
 
         msg = "\n"
         workedtime = timedelta(0)
-        for row in tasklist:
-            if(row['start'] is not None and row['end'] is not None):
-                diftime = self.get_task_time(d["start"], d["end"], row['start'], row['end'])
-                msg += row['name'] + ": " + str(diftime) + "\t(" + row['start'].strftime('%m/%d %H:%M') + " ~ " + row['end'].strftime('%m/%d %H:%M') + ")\n"
-                workedtime += diftime
-        msg += term + "'s working time: " + str(workedtime)
-        return msg
+        ## when -sum is NOT specified
+        if opt.sum == False:
+            for row in tasklist:
+                if(row['start'] is not None and row['end'] is not None):
+                    diftime = self.get_task_time(d["start"], d["end"], row['start'], row['end'])
+                    msg += row['name'] + ": " + str(diftime) + "\t(" + row['start'].strftime('%m/%d %H:%M') + " ~ " + row['end'].strftime('%m/%d %H:%M') + ")\n"
+                    workedtime += diftime
+            msg += term + "'s working time: " + str(workedtime)
+            return msg
 
-    # nameが同じものを集計する
-    def summary(self, uid, text):
-        term = ""
-        splitted = text.split('_')
-
-        if len(splitted) < 2:
-            term = "today"
-        else:
-            term = splitted[1]
-
-        now = datetime.now()
-        d = self.term_to_time_duration(now, term)
-        tasklist = self.db.get_task_list(uid, d["start"], d["end"])
-
-        msg = "\n"
-        workedtime = timedelta(0)
+        ## when -sum is specified
         dict = {}
         for row in tasklist:
             if(row['start'] is not None and row['end'] is not None):
@@ -91,57 +75,49 @@ class Controller:
         msg += term + "'s working time: " + str(workedtime)
         return msg
 
-    def start_task(self, ts, uid, text):
+    def start_task(self, ts, uid, opt):
         now = datetime.now()
-        splitted = text.split('_')
-        num = len(splitted)
-        task_name = splitted[1]
+        ## nameの指定は必須
+        if opt.name == '':
+            return "task name is required."
+        task_name = opt.name
 
-        if(num == 2 and len(splitted[1]) != 0): #時間指定なしなら投稿の時刻を利用
+        ## -bの指定があるか
+        if opt.begin == '':
             time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
-        if(num == 3 and len(splitted[2]) != 0): #時間指定ありならlinuxtimestanpに変換して利用
-            strtime = splitted[2].split(":")
+        else:
+            strtime = opt.begin.split(":")
             time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
 
         self.db.register_task(uid, task_name, time)
 
         return "Add " + task_name
 
-    def finish_task(self, ts, uid, text):
+    def finish_task(self, ts, uid, opt):
         now = datetime.now()
         result = -1
-        splitted = text.split('_')
-        task_name = splitted[1]
-        num = len(splitted)
 
-        if(num == 2 and len(splitted[1]) != 0): #時間指定なしなら投稿の時刻を利用
+        ## nameの指定はオプション
+        task_name = opt.name
+        if opt.name == '':
+            l = now + timedelta(hours=-12)
+            limit = datetime(l.year, l.month, l.day, 0, 0, 0).strftime('%Y/%m/%d %H:%M:%S')
+            task_name = self.db.get_current_task(uid, limit)
+
+        if opt.finish == '':
             time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
-        elif(num == 3 and len(splitted[2]) != 0): #時間指定ありならlinuxtimestanpに変換して利用
-            strtime = splitted[2].split(":")
+        else:
+            strtime = opt.finish.split(":")
             time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
 
+        print(time)
+        print(task_name)
         result = self.db.finish_task(uid, task_name, time)
 
         if(result == 0):
             return task_name + "を終了"
         else:
             return "終了処理が追加できませんでした（userがない，タスク名がない，時刻がおかしい,etc...）"
-
-    def finish_current_task(self, ts, uid):
-        result = -1
-
-        now = datetime.now()
-        l = now + timedelta(hours=-12)
-        limit = datetime(l.year, l.month, l.day, 0, 0, 0).strftime('%Y/%m/%d %H:%M:%S')
-        task = self.db.get_current_task(uid, limit)
-
-        time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
-        result = self.db.finish_task(uid, task['name'], time)
-
-        if(result == 0):
-            return task['name'] + "を終了"
-        else:
-            return "終了処理が追加できませんでした"
 
     def show_current_task(self, uid):
         now = datetime.now()
