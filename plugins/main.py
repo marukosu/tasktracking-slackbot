@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import argparse
 from slackbot.bot import respond_to     # @botname: で反応するデコーダ
 from slackbot.bot import listen_to      # チャネル内発言で反応するデコーダ
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
@@ -8,6 +9,15 @@ from plugins.controller import Controller
 test_flag = 0
 ct = Controller(test_flag)
 
+parser = argparse.ArgumentParser(prog='task')
+parser.add_argument('arg', help='arg', default='')
+parser.add_argument('-name', help='task name', default='')
+parser.add_argument('-begin', help='begin time', default='')
+parser.add_argument('-finish', help='finish time', default='')
+parser.add_argument('-edit', help='edit number', default='')
+parser.add_argument('-term', help='term (today(default), yesterday, week)', default='')
+parser.add_argument('-sum', help='summalize flag', action='store_true')
+
 #ユーザー登録処理
 @respond_to(r"^register me")
 def register(msg):
@@ -16,45 +26,32 @@ def register(msg):
     ct.register_user(uid, uname)
 
 #タスク一覧
-@listen_to(r"^out")
+@listen_to(r"^l$|^l |^list ")
 def sum(msg):
     uid = msg.body['user']
     text = msg.body['text']
-    ret = ct.out(uid, text)
-    msg.reply(ret)
-
-#タスク集計処理
-@listen_to(r"^sum")
-def sum(msg):
-    uid = msg.body['user']
-    text = msg.body['text']
-    ret = ct.summary(uid, text)
+    options = parser.parse_args(text.split())
+    ret = ct.list(uid, options)
     msg.reply(ret)
 
 #"s_"コマンドの処理
-@listen_to(r"^s_")
+@listen_to(r"^b |^begin ")
 def start(msg):
     ts = msg.body['ts']
     uid = msg.body['user']
     text = msg.body['text']
-    ret = ct.start_task(ts, uid, text)
+    options = parser.parse_args(text.split())
+    ret = ct.start_task(ts, uid, options)
     msg.reply(ret)
 
 #"f_"コマンドの処理
-@listen_to(r"^f_|^e_")
+@listen_to(r"^f$|^f |^finish ")
 def listen_f(msg):
     ts = msg.body['ts']
     uid = msg.body['user']
     text = msg.body['text']
-    ret = ct.finish_task(ts, uid, text)
-    msg.reply(ret)
-
-#"end"コマンドの処理
-@listen_to(r"^end$")
-def listen_f(msg):
-    ts = msg.body['ts']
-    uid = msg.body['user']
-    ret = ct.finish_current_task(ts, uid)
+    options = parser.parse_args(text.split())
+    ret = ct.finish_task(ts, uid, options)
     msg.reply(ret)
 
 # 最新の終了していないタスクの表示
