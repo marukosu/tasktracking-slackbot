@@ -26,7 +26,7 @@ def register(msg):
     ct.register_user(uid, uname)
 
 #タスク一覧
-@listen_to(r"^l$|^l |^list ")
+@listen_to(r"^l$|^l |^list$|^list ")
 def sum(msg):
     uid = msg.body['user']
     text = msg.body['text']
@@ -45,7 +45,7 @@ def start(msg):
     msg.reply(ret)
 
 #"f_"コマンドの処理
-@listen_to(r"^f$|^f |^finish ")
+@listen_to(r"^f$|^f |^finish$|^finish ")
 def listen_f(msg):
     ts = msg.body['ts']
     uid = msg.body['user']
@@ -66,10 +66,9 @@ def show_current_task(msg):
 def show_help(msg):
     commands = [
         ["@bot register me         ", "コメントしたチャンネルでbotを使うことを宣言する"],
-        ["s_taskname[_time]        ", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
-        ["f_taskname[_time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
-        ["sum[_today | _yesterday | _week] ", "指定した日の登録したタスク一覧を表示"],
-        ["out[_today | _yesterday | _week] ", "指定した日の登録したタスク一覧を表示"],
+        ["b taskname[-b time]        ", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
+        ["f taskname[-f time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
+        ["list(l) [-sum] [-t today|yesterday|week] ", "指定した日の登録したタスク一覧を表示"],
         ["now                      ", "直近の終了していなタスクの表示"],
     ]
     ret = "\n"

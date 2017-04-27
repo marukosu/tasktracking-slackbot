@@ -102,7 +102,7 @@ class Controller:
         if opt.name == '':
             l = now + timedelta(hours=-12)
             limit = datetime(l.year, l.month, l.day, 0, 0, 0).strftime('%Y/%m/%d %H:%M:%S')
-            task_name = self.db.get_current_task(uid, limit)
+            task = self.db.get_current_task(uid, limit)
 
         if opt.finish == '':
             time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
@@ -110,9 +110,7 @@ class Controller:
             strtime = opt.finish.split(":")
             time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
 
-        print(time)
-        print(task_name)
-        result = self.db.finish_task(uid, task_name, time)
+        result = self.db.finish_task(uid, task['name'], time)
 
         if(result == 0):
             return task_name + "を終了"
