@@ -10,8 +10,8 @@ test_flag = 0
 ct = Controller(test_flag)
 
 parser = argparse.ArgumentParser(prog='task')
-parser.add_argument('arg', help='arg', default='')
-parser.add_argument('-name', help='task name', default='')
+parser.add_argument('command', help='sub command value', default='')
+parser.add_argument('tname', help='task name', nargs='?', default='')
 parser.add_argument('-begin', help='begin time', default='')
 parser.add_argument('-finish', help='finish time', default='')
 parser.add_argument('-edit', help='edit number', default='')

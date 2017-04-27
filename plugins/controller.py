@@ -78,9 +78,9 @@ class Controller:
     def start_task(self, ts, uid, opt):
         now = datetime.now()
         ## nameの指定は必須
-        if opt.name == '':
+        if opt.tname == '':
             return "task name is required."
-        task_name = opt.name
+        task_name = opt.tname
 
         ## -bの指定があるか
         if opt.begin == '':
@@ -97,12 +97,13 @@ class Controller:
         now = datetime.now()
         result = -1
 
-        ## nameの指定はオプション
-        task_name = opt.name
-        if opt.name == '':
+        ## if tname is not specified, use current task
+        task_name = opt.tname
+        if task_name == '':
             l = now + timedelta(hours=-12)
             limit = datetime(l.year, l.month, l.day, 0, 0, 0).strftime('%Y/%m/%d %H:%M:%S')
             task = self.db.get_current_task(uid, limit)
+            task_name = task['name']
 
         if opt.finish == '':
             time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
@@ -110,7 +111,7 @@ class Controller:
             strtime = opt.finish.split(":")
             time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
 
-        result = self.db.finish_task(uid, task['name'], time)
+        result = self.db.finish_task(uid, task_name, time)
 
         if(result == 0):
             return task_name + "を終了"
