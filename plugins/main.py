@@ -36,12 +36,12 @@ def sum(msg):
 
 #"s_"コマンドの処理
 @listen_to(r"^b |^begin ")
-def start(msg):
+def begin(msg):
     ts = msg.body['ts']
     uid = msg.body['user']
     text = msg.body['text']
     options = parser.parse_args(text.split())
-    ret = ct.start_task(ts, uid, options)
+    ret = ct.begin_task(ts, uid, options)
     msg.reply(ret)
 
 #"f_"コマンドの処理
@@ -66,8 +66,8 @@ def show_current_task(msg):
 def show_help(msg):
     commands = [
         ["@bot register me         ", "コメントしたチャンネルでbotを使うことを宣言する"],
-        ["b taskname[-b time]        ", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
-        ["f taskname[-f time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
+        ["begin(b) taskname [-b time]        ", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
+        ["finish(f) taskname [-f time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["list(l) [-sum] [-t today|yesterday|week] ", "指定した日の登録したタスク一覧を表示"],
         ["now                      ", "直近の終了していなタスクの表示"],
     ]

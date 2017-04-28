@@ -13,11 +13,11 @@ CREATE TABLE tasks (
 	id        int PRIMARY KEY AUTO_INCREMENT,
 	uid       varchar(12),
 	name      varchar(50),
-	start DATETIME NULL,
-	end   DATETIME NULL,
+	begin     DATETIME NULL,
+	finish    DATETIME NULL,
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY(uid) REFERENCES users(id),
-	INDEX start_time(start)
+	INDEX begin_time(begin)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

@@ -33,35 +33,35 @@ class MySQL:
         s = text("INSERT INTO users (id, name) VALUES (:i, :n) ON DUPLICATE KEY UPDATE name = :n")
         conn.execute(s, i=id, n=name)
 
-    def register_task(self, uid, taskName, startTime):
+    def register_task(self, uid, taskName, beginTime):
         conn = self.engine.connect()
-        s = text("INSERT INTO tasks (uid, name, start) VALUES (:u, :n, :s)")
-        conn.execute(s, u=uid, n=taskName, s=startTime)
+        s = text("INSERT INTO tasks (uid, name, begin) VALUES (:u, :n, :s)")
+        conn.execute(s, u=uid, n=taskName, s=beginTime)
 
-    def finish_task(self, uid, taskName, endTime):
+    def finish_task(self, uid, taskName, finishTime):
         conn = self.engine.connect()
-        s = text("SELECT id FROM tasks WHERE uid = :u AND name = :n AND end is NULL ORDER BY id DESC LIMIT 1")
+        s = text("SELECT id FROM tasks WHERE uid = :u AND name = :n AND finish is NULL ORDER BY id DESC LIMIT 1")
         task = conn.execute(s, u=uid, n=taskName).fetchone()
         if task is None:
             return -1
         id = task['id']
-        s = text("UPDATE tasks SET end = :e WHERE id = :i")
-        conn.execute(s, e=endTime, i=id)
+        s = text("UPDATE tasks SET finish = :e WHERE id = :i")
+        conn.execute(s, e=finishTime, i=id)
 
         return 0
 
     def get_task_list(self, uid, fromTime, toTime):
         conn = self.engine.connect()
-        s = text("SELECT name, start, end FROM tasks WHERE uid = :u AND end > :f AND (start < :t OR end IS NULL)")
+        s = text("SELECT name, begin, finish FROM tasks WHERE uid = :u AND finish > :f AND (begin < :t OR finish IS NULL)")
         tasklist = conn.execute(s, u=uid, f=fromTime, t=toTime).fetchall()
 
         for row in tasklist:
-            print("Name:" + row['name'] + "  Start:" + str(row['start']) + "  End:" + str(row['end']))
+            print("Name:" + row['name'] + "  begin:" + str(row['begin']) + "  finish:" + str(row['finish']))
         return tasklist
 
     def get_current_task(self, uid, limit):
         conn = self.engine.connect()
-        s = text("SELECT name, start FROM tasks WHERE uid = :u AND end IS NULL AND start > :l ORDER BY start DESC LIMIT 1")
+        s = text("SELECT name, begin FROM tasks WHERE uid = :u AND finish IS NULL AND begin > :l ORDER BY begin DESC LIMIT 1")
         task = conn.execute(s, u=uid, l=limit).fetchone()
         return task
 
