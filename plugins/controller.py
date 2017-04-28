@@ -13,30 +13,30 @@ class Controller:
     def term_to_time_duration(self, now, term):
         # default is "today"
         st = now
-        end = datetime(now.year,now.month,now.day,23,59,59)
+        finish = datetime(now.year,now.month,now.day,23,59,59)
 
         if(term == "yesterday"):
             st = now + timedelta(days=-1)
         elif(term == "week"):
             st = now + timedelta(days=-6)
 
-        start = datetime(st.year,st.month,st.day,0,0,0)
-        return {"start": start, "end": end}
+        begin = datetime(st.year,st.month,st.day,0,0,0)
+        return {"begin": begin, "finish": finish}
 
     def get_task_time(self, s, e, rs, re):
-        start = rs
-        end = re
-        # 日付超え対応, start_timeより前だったり、endより後のものはいれない
+        begin = rs
+        finish = re
+        # 日付超え対応, begin_timeより前だったり、finishより後のものはいれない
         if(rs < s):
             ## 次の日の0時
             rs += timedelta(days=+1)
-            start = datetime(rs.year, rs.month, rs.day,0,0,0)
+            begin = datetime(rs.year, rs.month, rs.day,0,0,0)
         if(re > e):
             ## 前の日の0時1秒前
             re += timedelta(days=-1)
-            end = datetime(re.year, re.month, re.day,23,59,59)
+            finish = datetime(re.year, re.month, re.day,23,59,59)
 
-        return end - start
+        return finish - begin
 
     def list(self, uid, opt):
         term = opt.term
@@ -46,16 +46,16 @@ class Controller:
 
         now = datetime.now()
         d = self.term_to_time_duration(now, term)
-        tasklist = self.db.get_task_list(uid, d["start"].strftime('%Y/%m/%d %H:%M:%S'), d["end"].strftime('%Y/%m/%d %H:%M:%S'))
+        tasklist = self.db.get_task_list(uid, d["begin"].strftime('%Y/%m/%d %H:%M:%S'), d["finish"].strftime('%Y/%m/%d %H:%M:%S'))
 
         msg = "\n"
         workedtime = timedelta(0)
         ## when -sum is NOT specified
         if opt.sum == False:
             for row in tasklist:
-                if(row['start'] is not None and row['end'] is not None):
-                    diftime = self.get_task_time(d["start"], d["end"], row['start'], row['end'])
-                    msg += row['name'] + ": " + str(diftime) + "\t(" + row['start'].strftime('%m/%d %H:%M') + " ~ " + row['end'].strftime('%m/%d %H:%M') + ")\n"
+                if(row['begin'] is not None and row['finish'] is not None):
+                    diftime = self.get_task_time(d["begin"], d["finish"], row['begin'], row['finish'])
+                    msg += row['name'] + ": " + str(diftime) + "\t(" + row['begin'].strftime('%m/%d %H:%M') + " ~ " + row['finish'].strftime('%m/%d %H:%M') + ")\n"
                     workedtime += diftime
             msg += term + "'s working time: " + str(workedtime)
             return msg
@@ -63,8 +63,8 @@ class Controller:
         ## when -sum is specified
         dict = {}
         for row in tasklist:
-            if(row['start'] is not None and row['end'] is not None):
-                diftime = self.get_task_time(d["start"], d["end"], row['start'], row['end'])
+            if(row['begin'] is not None and row['finish'] is not None):
+                diftime = self.get_task_time(d["begin"], d["finish"], row['begin'], row['finish'])
                 if(not row['name'] in dict):
                     dict[row['name']] = diftime
                 else:
@@ -75,7 +75,7 @@ class Controller:
         msg += term + "'s working time: " + str(workedtime)
         return msg
 
-    def start_task(self, ts, uid, opt):
+    def begin_task(self, ts, uid, opt):
         now = datetime.now()
         ## nameの指定は必須
         if opt.tname == '':
@@ -126,6 +126,6 @@ class Controller:
         if(task == None):
             return "There is no task..."
 
-        start_time = task['start'].strftime('%Y/%m/%d %H:%M:%S')
-        return "The latest task is '''" + task['name'] + "''',    " + "started at " + start_time
+        begin_time = task['begin'].strftime('%Y/%m/%d %H:%M:%S')
+        return "The latest task is '''" + task['name'] + "''',    " + "begined at " + begin_time
 
