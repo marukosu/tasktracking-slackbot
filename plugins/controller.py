@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 from plugins.storage import MySQL
+import re
 
 class Controller:
     def __init__(self, test):
         self.db = MySQL(test)
+        self.re_ydt  = re.compile("[0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}-[0-9]{1,2}:[0-9]{1,2}")
+        self.re_dt   = re.compile("[0-9]{1,2}\/[0-9]{1,2}-[0-9]{1,2}:[0-9]{1,2}")
+        self.re_time = re.compile("[0-9]{1,2}:[0-9]{1,2}")
 
     def register_user(self, uid, user_name):
         self.db.register_user(uid, user_name)
@@ -17,6 +21,7 @@ class Controller:
 
         if(term == "yesterday"):
             st = now + timedelta(days=-1)
+            finish = datetime(st.year,st.month,st.day,23,59,59)
         elif(term == "week"):
             st = now + timedelta(days=-6)
 
@@ -37,6 +42,18 @@ class Controller:
             finish = datetime(re.year, re.month, re.day,23,59,59)
 
         return finish - begin
+
+    def str_to_datetime(self, str):
+        now = datetime.now()
+        dt = None
+        if self.re_ydt.search(str) != None:
+            dt = datetime.strptime(str, '%Y/%m/%d-%H:%M')
+        elif self.re_dt.search(str) != None:
+            dt = datetime.strptime(now.strftime('%Y/')+str, '%Y/%m/%d-%H:%M')
+        elif self.re_time.search(str) != None:
+            dt = datetime.strptime(now.strftime('%Y/%m/%d')+"-"+str, '%Y/%m/%d-%H:%M')
+
+        return dt
 
     def list(self, uid, opt):
         term = opt.term
@@ -76,7 +93,6 @@ class Controller:
         return msg
 
     def begin_task(self, ts, uid, opt):
-        now = datetime.now()
         ## nameの指定は必須
         if opt.tname == '':
             return "task name is required."
@@ -84,12 +100,14 @@ class Controller:
 
         ## -bの指定があるか
         if opt.begin == '':
-            time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
+            dt = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
         else:
-            strtime = opt.begin.split(":")
-            time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
+            dt = self.str_to_datetime(opt.begin)
 
-        self.db.register_task(uid, task_name, time)
+        if dt == None:
+            return "Failed to convert specified time to datetime"
+
+        self.db.register_task(uid, task_name, dt)
 
         return "Add " + task_name
 
@@ -106,12 +124,14 @@ class Controller:
             task_name = task['name']
 
         if opt.finish == '':
-            time = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
+            dt = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
         else:
-            strtime = opt.finish.split(":")
-            time = datetime(now.year, now.month, now.day, int(strtime[0]), int(strtime[1]), 0).strftime('%Y/%m/%d %H:%M:%S')
+            dt = self.str_to_datetime(opt.finish)
 
-        result = self.db.finish_task(uid, task_name, time)
+        if dt == None:
+            return "Failed to convert specified time to datetime"
+
+        result = self.db.finish_task(uid, task_name, dt)
 
         if(result == 0):
             return task_name + "を終了"
