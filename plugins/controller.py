@@ -58,12 +58,18 @@ class Controller:
     def list(self, uid, opt):
         term = opt.term
 
-        if term == '':
-            term = "today"
+        if opt.begin == '' and opt.finish == '':
+            if term == '':
+                term = "today"
+            now = datetime.now()
+            d = self.term_to_time_duration(now, term)
+            dt_begin  = d["begin"]
+            dt_finish = d["finish"]
+        else:
+            dt_begin  = self.str_to_datetime(opt.begin)
+            dt_finish = self.str_to_datetime(opt.finish)
 
-        now = datetime.now()
-        d = self.term_to_time_duration(now, term)
-        tasklist = self.db.get_task_list(uid, d["begin"].strftime('%Y/%m/%d %H:%M:%S'), d["finish"].strftime('%Y/%m/%d %H:%M:%S'))
+        tasklist = self.db.get_task_list(uid, dt_begin.strftime('%Y/%m/%d %H:%M:%S'), dt_finish.strftime('%Y/%m/%d %H:%M:%S'))
 
         msg = "\n"
         workedtime = timedelta(0)
@@ -71,7 +77,7 @@ class Controller:
         if opt.sum == False:
             for row in tasklist:
                 if(row['begin'] is not None and row['finish'] is not None):
-                    diftime = self.get_task_time(d["begin"], d["finish"], row['begin'], row['finish'])
+                    diftime = self.get_task_time(dt_begin, dt_finish, row['begin'], row['finish'])
                     msg += row['name'] + ": " + str(diftime) + "\t(" + row['begin'].strftime('%m/%d %H:%M') + " ~ " + row['finish'].strftime('%m/%d %H:%M') + ")\n"
                     workedtime += diftime
             msg += term + "'s working time: " + str(workedtime)
@@ -81,7 +87,7 @@ class Controller:
         dict = {}
         for row in tasklist:
             if(row['begin'] is not None and row['finish'] is not None):
-                diftime = self.get_task_time(d["begin"], d["finish"], row['begin'], row['finish'])
+                diftime = self.get_task_time(dt_begin, dt_finish, row['begin'], row['finish'])
                 if(not row['name'] in dict):
                     dict[row['name']] = diftime
                 else:
