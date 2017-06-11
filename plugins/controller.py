@@ -99,7 +99,7 @@ class Controller:
                     dict[row['name']] = diftime
                 else:
                     dict[row['name']] += diftime
-        for k,v in sorted(dict.items(), key=lambda x: x[0]):
+        for k,v in sorted(dict.items()):
             msg += k + ": " + self.timedelta_to_hhmmss(v) + "\n"
             workedtime += v
         msg += term + "'s working time: " + self.timedelta_to_hhmmss(workedtime)
