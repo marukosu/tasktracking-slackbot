@@ -55,6 +55,13 @@ class Controller:
 
         return dt
 
+    def timedelta_to_hhmmss(self, timedel):
+    	hour = timedel.seconds // 3600 + timedel.days * 24
+    	minutes = timedel.seconds % 3600 // 60
+    	seconds = timedel.seconds % 3600 % 60
+    	displayTime = str(int(hour)) + ":" + str(int(minutes)) +  ":" + str(int(seconds))
+    	return displayTime
+
     def list(self, uid, opt):
         term = opt.term
 
@@ -80,7 +87,7 @@ class Controller:
                     diftime = self.get_task_time(dt_begin, dt_finish, row['begin'], row['finish'])
                     msg += row['name'] + ": " + str(diftime) + "\t(" + row['begin'].strftime('%m/%d %H:%M') + " ~ " + row['finish'].strftime('%m/%d %H:%M') + ")\n"
                     workedtime += diftime
-            msg += term + "'s working time: " + str(workedtime)
+            msg += term + "'s working time: " + self.timedelta_to_hhmmss(workedtime)
             return msg
 
         ## when -sum is specified
@@ -92,10 +99,10 @@ class Controller:
                     dict[row['name']] = diftime
                 else:
                     dict[row['name']] += diftime
-        for k,v in dict.items():
-            msg += k + ": " + str(v) + "\n"
+        for k,v in sorted(dict.items()):
+            msg += k + ": " + self.timedelta_to_hhmmss(v) + "\n"
             workedtime += v
-        msg += term + "'s working time: " + str(workedtime)
+        msg += term + "'s working time: " + self.timedelta_to_hhmmss(workedtime)
         return msg
 
     def begin_task(self, ts, uid, opt):
