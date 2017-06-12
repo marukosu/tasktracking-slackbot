@@ -59,7 +59,9 @@ class Controller:
     	hour = timedel.seconds // 3600 + timedel.days * 24
     	minutes = timedel.seconds % 3600 // 60
     	seconds = timedel.seconds % 3600 % 60
-    	displayTime = str(int(hour)) + ":" + str(int(minutes)) +  ":" + str(int(seconds))
+    	strmin = str(int(minutes)) if int(minutes) >= 10 else "0" + str(int(minutes))
+    	strsec = str(int(seconds)) if int(seconds) >= 10 else "0" + str(int(seconds))
+    	displayTime = str(int(hour)) + ":" + strmin +  ":" + strsec
     	return displayTime
 
     def list(self, uid, opt):
