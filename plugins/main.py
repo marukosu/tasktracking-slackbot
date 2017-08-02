@@ -5,9 +5,12 @@ from slackbot.bot import listen_to      # チャネル内発言で反応する�
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
 from datetime import datetime, timedelta
 from plugins.controller import Controller
+from plugins.reporter import Reporter
+import time
 
 test_flag = 0
 ct = Controller(test_flag)
+rp = Reporter(ct)
 
 parser = argparse.ArgumentParser(prog='task')
 parser.add_argument('command', help='sub command value', default='')
@@ -17,6 +20,24 @@ parser.add_argument('-finish', help='finish time', default='')
 parser.add_argument('-edit', help='edit number', default='')
 parser.add_argument('-term', help='term (today(default), yesterday, week)', default='')
 parser.add_argument('-sum', help='summalize flag', action='store_true')
+parser.add_argument('-repeat', help='repeat time', default='')
+
+#日毎と週ごとのタスクトラッキングデータを出力（今後dayとweekで分けても良い）
+@respond_to(r"^startReport|^stopReport|^stopAllReport")
+def cron_report(msg):
+    uid = msg.body['user']
+    text = msg.body['text']
+    #将来,contorollerのlist_for_reportではなくlistを使用し
+    #optionsによってユーザーごとにタスクの集計範囲を分ける可能性があります
+    #options = parser.parse_args(text.split())
+    if text == "startReport":
+        rep = rp.add_user(uid,msg)
+        msg.reply(rep)
+    elif text == "stopReport":
+        rep = rp.remove_user(uid)
+        msg.reply(rep)
+    elif text == "stopAllReport":
+        rp.stop_report(msg)
 
 #ユーザー登録処理
 @respond_to(r"^register me")

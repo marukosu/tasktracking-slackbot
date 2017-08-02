@@ -107,6 +107,33 @@ class Controller:
         msg += term + "'s working time: " + self.timedelta_to_hhmmss(workedtime)
         return msg
 
+    def list_for_report(self, uid, term):
+
+        now = datetime.now()
+        d = self.term_to_time_duration(now, term)
+        dt_begin  = d["begin"]
+        dt_finish = d["finish"]
+
+        tasklist = self.db.get_task_list(uid, dt_begin.strftime('%Y/%m/%d %H:%M:%S'), dt_finish.strftime('%Y/%m/%d %H:%M:%S'))
+
+        msg = "\n"
+        workedtime = timedelta(0)
+
+        ## when -sum is specified
+        dict = {}
+        for row in tasklist:
+            if(row['begin'] is not None and row['finish'] is not None):
+                diftime = self.get_task_time(dt_begin, dt_finish, row['begin'], row['finish'])
+                if(not row['name'] in dict):
+                    dict[row['name']] = diftime
+                else:
+                    dict[row['name']] += diftime
+        for k,v in sorted(dict.items()):
+            msg += k + ": " + self.timedelta_to_hhmmss(v) + "\n"
+            workedtime += v
+        msg += term + "'s working time: " + self.timedelta_to_hhmmss(workedtime)
+        return msg
+
     def begin_task(self, ts, uid, opt):
         ## nameの指定は必須
         if opt.tname == '':
@@ -163,4 +190,5 @@ class Controller:
 
         begin_time = task['begin'].strftime('%Y/%m/%d %H:%M:%S')
         return "The latest task is '''" + task['name'] + "''',    " + "begined at " + begin_time
+        
 
