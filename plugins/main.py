@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import argparse
+import threading
 from slackbot.bot import respond_to     # @botname: で反応するデコーダ
 from slackbot.bot import listen_to      # チャネル内発言で反応するデコーダ
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
@@ -17,6 +18,20 @@ parser.add_argument('-finish', help='finish time', default='')
 parser.add_argument('-edit', help='edit number', default='')
 parser.add_argument('-term', help='term (today(default), yesterday, week)', default='')
 parser.add_argument('-sum', help='summalize flag', action='store_true')
+
+def cronlissner(msg):
+    uid = msg.body['user']
+    options = parser.parse_args(["l"])
+    ret = ct.list(uid, options)
+    msg.reply(ret)
+    t=threading.Timer(60,cronlissner, args = (msg,))
+    t.start()
+
+#cron処理
+@listen_to(r"^cron me")
+def cron(msg):
+    t=threading.Thread(target=cronlissner,args=(msg,))
+    t.start()
 
 #ユーザー登録処理
 @respond_to(r"^register me")
