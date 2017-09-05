@@ -46,14 +46,18 @@ class Controller:
     def str_to_datetime(self, str):
         now = datetime.now()
         dt = None
+        form_type = -1
         if self.re_ydt.search(str) != None:
             dt = datetime.strptime(str, '%Y/%m/%d-%H:%M')
+            form_type = 0
         elif self.re_dt.search(str) != None:
             dt = datetime.strptime(now.strftime('%Y/')+str, '%Y/%m/%d-%H:%M')
+            form_type = 1
         elif self.re_time.search(str) != None:
             dt = datetime.strptime(now.strftime('%Y/%m/%d')+"-"+str, '%Y/%m/%d-%H:%M')
+            form_type = 2
 
-        return dt
+        return dt, form_type
 
     def timedelta_to_hhmmss(self, timedel):
     	hour = timedel.seconds // 3600 + timedel.days * 24
@@ -75,8 +79,8 @@ class Controller:
             dt_begin  = d["begin"]
             dt_finish = d["finish"]
         else:
-            dt_begin  = self.str_to_datetime(opt.begin)
-            dt_finish = self.str_to_datetime(opt.finish)
+            dt_begin, form_type  = self.str_to_datetime(opt.begin)
+            dt_finish, form_type = self.str_to_datetime(opt.finish)
 
         tasklist = self.db.get_task_list(uid, dt_begin.strftime('%Y/%m/%d %H:%M:%S'), dt_finish.strftime('%Y/%m/%d %H:%M:%S'))
 
@@ -117,7 +121,7 @@ class Controller:
         if opt.begin == '':
             dt = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
         else:
-            dt = self.str_to_datetime(opt.begin)
+            dt, form_type = self.str_to_datetime(opt.begin)
 
         if dt == None:
             return "Failed to convert specified time to datetime"
@@ -141,7 +145,7 @@ class Controller:
         if opt.finish == '':
             dt = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
         else:
-            dt = self.str_to_datetime(opt.finish)
+            dt, form_type = self.str_to_datetime(opt.finish)
 
         if dt == None:
             return "Failed to convert specified time to datetime"
@@ -163,4 +167,5 @@ class Controller:
 
         begin_time = task['begin'].strftime('%Y/%m/%d %H:%M:%S')
         return "The latest task is '''" + task['name'] + "''',    " + "begined at " + begin_time
+        
 

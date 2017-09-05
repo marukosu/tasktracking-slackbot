@@ -6,8 +6,9 @@ from slackbot.bot import listen_to      # チャネル内発言で反応する�
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
 from datetime import datetime, timedelta
 from plugins.controller import Controller
+import time
 
-test_flag = 0
+test_flag = 1
 ct = Controller(test_flag)
 
 parser = argparse.ArgumentParser(prog='task')
@@ -18,19 +19,37 @@ parser.add_argument('-finish', help='finish time', default='')
 parser.add_argument('-edit', help='edit number', default='')
 parser.add_argument('-term', help='term (today(default), yesterday, week)', default='')
 parser.add_argument('-sum', help='summalize flag', action='store_true')
+parser.add_argument('-repeat', help='repeat time', default='')
 
-def cronlissner(msg):
-    uid = msg.body['user']
-    options = parser.parse_args(["l"])
-    ret = ct.list(uid, options)
+def cron_repeat(msg,uid,opt,repeat_sec,form_type,first_time): 
+    ret = ct.list(uid, opt)
     msg.reply(ret)
-    t=threading.Timer(60,cronlissner, args = (msg,))
+    if first_time == False:
+        if form_type == 1: #every week
+            repeat_sec = 604800
+        if form_type == 2: #every day
+            repeat_sec = 86400
+    msg.reply("next time >> " + str(repeat_sec) + "sec. later\n")
+    #wanna repeat according to list option like cron -r "l -s -b 4/1 -f 4/3"
+    #-b and -f is added each repeat_time? 
+    t=threading.Timer(repeat_sec,cron_repeat, args = (msg,uid,opt,repeat_sec,form_type,False))
     t.start()
 
 #cron処理
-@listen_to(r"^cron me")
+@listen_to(r"^cron")
 def cron(msg):
-    t=threading.Thread(target=cronlissner,args=(msg,))
+    uid = msg.body['user']
+    text = msg.body['text']
+    options = parser.parse_args(text.split())
+    dt, form_type = ct.str_to_datetime(options.repeat)
+    repeat_sec = time.mktime(dt.timetuple()) - time.mktime(datetime.now().timetuple())
+    # this implement allow - time, this is not good
+    if form_type == 1:
+        options.term = "week"
+    if form_type == 2:
+        repeat_sec = repeat_sec if repeat_sec > 0 else 86400 + repeat_sec
+        options.term = "today"
+    t=threading.Thread(target=cron_repeat,args=(msg,uid,options,repeat_sec,form_type,True))
     t.start()
 
 #ユーザー登録処理
