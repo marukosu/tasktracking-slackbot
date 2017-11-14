@@ -7,9 +7,14 @@ from slackbot.bot import default_reply  # 該当する応答がない場合に�
 from datetime import datetime, timedelta
 from plugins.controller import Controller
 import time
+from crontab import CronTab
+import math
 
 test_flag = 1
 ct = Controller(test_flag)
+
+userlist_report = {}
+
 
 parser = argparse.ArgumentParser(prog='task')
 parser.add_argument('command', help='sub command value', default='')
@@ -21,36 +26,48 @@ parser.add_argument('-term', help='term (today(default), yesterday, week)', defa
 parser.add_argument('-sum', help='summalize flag', action='store_true')
 parser.add_argument('-repeat', help='repeat time', default='')
 
-def cron_repeat(msg,uid,opt,repeat_sec,form_type,first_time): 
-    ret = ct.list(uid, opt)
-    msg.reply(ret)
-    if first_time == False:
-        if form_type == 1: #every week
-            repeat_sec = 604800
-        if form_type == 2: #every day
-            repeat_sec = 86400
-    msg.reply("next time >> " + str(repeat_sec) + "sec. later\n")
-    #wanna repeat according to list option like cron -r "l -s -b 4/1 -f 4/3"
-    #-b and -f is added each repeat_time? 
-    t=threading.Timer(repeat_sec,cron_repeat, args = (msg,uid,opt,repeat_sec,form_type,False))
-    t.start()
+def report(options):
+    isreport_run = True
+    entry = CronTab('* * * * *')#55 23
+    next_seconds=math.ceil(entry.next())
+    print("next run>" + str(next_seconds))
+    while(isreport_run):
+        options.term = "today"
+        for user in userlist_report:
+            ret = ct.list(user, options)
+            userlist_report[user].reply(ret)
+        if datetime.now().weekday() == 1: # 6
+            options.term = "week"
+            for user in userlist_report:
+                ret = ct.list(user, options)
+                userlist_report[user].reply(ret)
+        time.sleep(next_seconds)
+    for user in userlist_report:
+        userlist_report[user].reply("end report thread")
 
-#cron処理
-@listen_to(r"^cron")
-def cron(msg):
+#日毎と週ごとのタスクトラッキングデータを出力（今後dayとweekで分けても良い）
+@respond_to(r"^startReport|^stopReport|^stopAllReport")
+def cron_report(msg):
     uid = msg.body['user']
     text = msg.body['text']
     options = parser.parse_args(text.split())
-    dt, form_type = ct.str_to_datetime(options.repeat)
-    repeat_sec = time.mktime(dt.timetuple()) - time.mktime(datetime.now().timetuple())
-    # this implement allow - time, this is not good
-    if form_type == 1:
-        options.term = "week"
-    if form_type == 2:
-        repeat_sec = repeat_sec if repeat_sec > 0 else 86400 + repeat_sec
-        options.term = "today"
-    t=threading.Thread(target=cron_repeat,args=(msg,uid,options,repeat_sec,form_type,True))
-    t.start()
+    options.sum = True
+
+    if text == "startReport":
+        userlist_report[uid] = msg
+        try:
+            report_thread
+        except NameError:
+            report_thread=threading.Thread(target=report,daemon = True,args = (options,))
+            report_thread.start()
+        msg.reply("I periodically report your daily/weekly task data at 23:55")
+    elif text == "stopReport":
+        msg.reply("I stop your report notification at nextCall")
+        del userlist_report[uid]
+    elif text == "stopAllReport":
+        report_thread.isreport_run = False
+        for user in userlist_report:
+            userlist_report[user].reply("I stop report [thread] at nextCall")
 
 #ユーザー登録処理
 @respond_to(r"^register me")
