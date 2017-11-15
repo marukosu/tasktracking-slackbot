@@ -1,20 +1,16 @@
 # -*- coding: utf-8 -*-
 import argparse
-import threading
 from slackbot.bot import respond_to     # @botname: で反応するデコーダ
 from slackbot.bot import listen_to      # チャネル内発言で反応するデコーダ
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
 from datetime import datetime, timedelta
 from plugins.controller import Controller
+from plugins.reporter import Reporter
 import time
-from crontab import CronTab
-import math
 
-test_flag = 1
+test_flag = 0
 ct = Controller(test_flag)
-
-userlist_report = {}
-
+rp = Reporter(ct)
 
 parser = argparse.ArgumentParser(prog='task')
 parser.add_argument('command', help='sub command value', default='')
@@ -26,48 +22,22 @@ parser.add_argument('-term', help='term (today(default), yesterday, week)', defa
 parser.add_argument('-sum', help='summalize flag', action='store_true')
 parser.add_argument('-repeat', help='repeat time', default='')
 
-def report(options):
-    isreport_run = True
-    entry = CronTab('* * * * *')#55 23
-    next_seconds=math.ceil(entry.next())
-    print("next run>" + str(next_seconds))
-    while(isreport_run):
-        options.term = "today"
-        for user in userlist_report:
-            ret = ct.list(user, options)
-            userlist_report[user].reply(ret)
-        if datetime.now().weekday() == 1: # 6
-            options.term = "week"
-            for user in userlist_report:
-                ret = ct.list(user, options)
-                userlist_report[user].reply(ret)
-        time.sleep(next_seconds)
-    for user in userlist_report:
-        userlist_report[user].reply("end report thread")
-
 #日毎と週ごとのタスクトラッキングデータを出力（今後dayとweekで分けても良い）
 @respond_to(r"^startReport|^stopReport|^stopAllReport")
 def cron_report(msg):
     uid = msg.body['user']
     text = msg.body['text']
-    options = parser.parse_args(text.split())
-    options.sum = True
-
+    #将来,contorollerのlist_for_reportではなくlistを使用し
+    #optionsによってユーザーごとにタスクの集計範囲を分ける可能性があります
+    #options = parser.parse_args(text.split())
     if text == "startReport":
-        userlist_report[uid] = msg
-        try:
-            report_thread
-        except NameError:
-            report_thread=threading.Thread(target=report,daemon = True,args = (options,))
-            report_thread.start()
-        msg.reply("I periodically report your daily/weekly task data at 23:55")
+        rep = rp.add_user(uid,msg)
+        msg.reply(rep)
     elif text == "stopReport":
-        msg.reply("I stop your report notification at nextCall")
-        del userlist_report[uid]
+        rep = rp.remove_user(uid)
+        msg.reply(rep)
     elif text == "stopAllReport":
-        report_thread.isreport_run = False
-        for user in userlist_report:
-            userlist_report[user].reply("I stop report [thread] at nextCall")
+        rp.stop_report(msg)
 
 #ユーザー登録処理
 @respond_to(r"^register me")
