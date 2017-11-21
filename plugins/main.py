@@ -91,6 +91,9 @@ def show_help(msg):
         ["finish(f) taskname [-f time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["list(l) [-sum] [-t today|yesterday|week] ", "指定した日の登録したタスク一覧を表示"],
         ["now                      ", "直近の終了していなタスクの表示"],
+        ["@bot startReport         ", "毎日23:55にその日の登録されたタスクデータを投稿する．日曜日は週報も投稿する"]
+        ["@bot stopReport          ", "タスクデータの定期投稿を停止する"]
+        ["@bot stopAllReport          ", "全ユーザーのタスクデータの定期投稿を停止する（停止すべきユーザーが操作できない場合）"]
     ]
     ret = "\n"
     for c in commands:
