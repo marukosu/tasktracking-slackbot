@@ -65,3 +65,12 @@ class MySQL:
         task = conn.execute(s, u=uid, l=limit).fetchone()
         return task
 
+    def register_report(self, uid, time, interval, command):
+        raise NotImplementedError
+
+    def get_report_list(self, uid = nil):
+        raise NotImplementedError
+
+    def delete_report(self, uid, reportId):
+        raise NotImplementedError
+

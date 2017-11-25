@@ -21,3 +21,13 @@ CREATE TABLE tasks (
 	INDEX begin_time(begin)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE reports (
+	id        int PRIMARY KEY AUTO_INCREMENT,
+	uid       varchar(12),
+	interval  varchar(8),
+	time      varchar(6),
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	FOREIGN KEY(uid) REFERENCES users(id),
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
