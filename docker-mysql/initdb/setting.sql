@@ -26,6 +26,7 @@ CREATE TABLE reports (
 	uid       varchar(12),
 	interval  varchar(8),
 	time      varchar(6),
+	command   varchar(40),
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY(uid) REFERENCES users(id),
