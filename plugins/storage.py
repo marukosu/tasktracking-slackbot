@@ -52,7 +52,7 @@ class MySQL:
 
     def get_task_list(self, uid, fromTime, toTime):
         conn = self.engine.connect()
-        s = text("SELECT name, begin, finish FROM tasks WHERE uid = :u AND finish > :f AND (begin < :t OR finish IS NULL)")
+        s = text("SELECT id, name, begin, finish FROM tasks WHERE uid = :u AND finish > :f AND (begin < :t OR finish IS NULL)")
         tasklist = conn.execute(s, u=uid, f=fromTime, t=toTime).fetchall()
 
         for row in tasklist:
@@ -64,4 +64,12 @@ class MySQL:
         s = text("SELECT name, begin FROM tasks WHERE uid = :u AND finish IS NULL AND begin > :l ORDER BY begin DESC LIMIT 1")
         task = conn.execute(s, u=uid, l=limit).fetchone()
         return task
+
+    def delete_task(self, id, uid):
+        conn = self.engine.connect()
+        s = text("DELETE tasks WHERE id = :i AND uid = :u")
+        task = conn.execute(s, i=id, u=uid)
+        return task
+
+
 
