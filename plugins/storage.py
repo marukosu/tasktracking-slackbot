@@ -65,12 +65,19 @@ class MySQL:
         task = conn.execute(s, u=uid, l=limit).fetchone()
         return task
 
-    def register_report(self, uid, time, interval, command):
-        raise NotImplementedError
+    def register_report(self, uid, every, at, command):
+        conn = self.engine.connect()
+        s = text("INSERT INTO reports (uid, every, at, command) VALUES (:u, :e, :a, :c)")
+        conn.execute(s, u=uid, e=every, a=at, c=command)
 
-    def get_report_list(self, uid = nil):
-        raise NotImplementedError
+    def get_report_list(self, uid = None):
+        conn = self.engine.connect()
+        if uid != None:
+            s = text("SELECT r.id, u.name, r.every, r.at, r.command, r.created_at, r.updated_at FROM reports r INNER JOIN users u ON r.uid = u.id ORDER BY u.name ASC")
+            reports = conn.execute(s).fetchall()
+        else:
+            s = text("SELECT r.id, u.name, r.every, r.at, r.created_at, r.updated_at FROM reports r INNER JOIN users u ON r.uid = u.id WHERE u.id = :u ORDER BY r.id ASC")
+            reports = conn.execute(s).fetchall()
 
-    def delete_report(self, uid, reportId):
-        raise NotImplementedError
+        return reports
 
