@@ -65,10 +65,10 @@ class MySQL:
         task = conn.execute(s, u=uid, l=limit).fetchone()
         return task
 
-    def register_report(self, uid, every, at, command):
+    def register_report(self, uid, every, at, command, channel):
         conn = self.engine.connect()
-        s = text("INSERT INTO reports (uid, every, at, command) VALUES (:u, :e, :a, :c)")
-        conn.execute(s, u=uid, e=every, a=at, c=command)
+        s = text("INSERT INTO reports (uid, every, at, command, channel) VALUES (:u, :e, :a, :c, :ch)")
+        conn.execute(s, u=uid, e=every, a=at, c=command, ch=channel)
 
     def get_report_list(self, uid = None):
         conn = self.engine.connect()

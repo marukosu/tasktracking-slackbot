@@ -27,6 +27,7 @@ CREATE TABLE reports (
 	every     varchar(9),
 	at        varchar(6),
 	command   varchar(40),
+	channel   varchar(21),
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY(uid) REFERENCES users(id)
