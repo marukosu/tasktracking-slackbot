@@ -72,11 +72,11 @@ class MySQL:
 
     def get_report_list(self, uid = None):
         conn = self.engine.connect()
-        if uid != None:
+        if uid == None:
             s = text("SELECT r.id, u.name, r.every, r.at, r.command, r.created_at, r.updated_at FROM reports r INNER JOIN users u ON r.uid = u.id ORDER BY u.name ASC")
             reports = conn.execute(s).fetchall()
         else:
-            s = text("SELECT r.id, u.name, r.every, r.at, r.created_at, r.updated_at FROM reports r INNER JOIN users u ON r.uid = u.id WHERE u.id = :u ORDER BY r.id ASC")
+            s = text("SELECT r.id, u.name, r.every, r.at, r.created_at, r.updated_at FROM reports r INNER JOIN users u ON r.uid = u.id WHERE u.id = uid ORDER BY r.id ASC")
             reports = conn.execute(s).fetchall()
 
         return reports
