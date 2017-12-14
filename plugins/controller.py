@@ -1,14 +1,29 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
 from plugins.storage import MySQL
+from slacker import Slacker
+import slackbot_settings
 import re
+import threading
+import sched
+import time
+import shlex
 
 class Controller:
-    def __init__(self, test):
+    def __init__(self, test, parser):
+        self.sender = Slacker(slackbot_settings.API_TOKEN)
         self.db = MySQL(test)
+        self.parser = parser
         self.re_ydt  = re.compile("[0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}-[0-9]{1,2}:[0-9]{1,2}")
         self.re_dt   = re.compile("[0-9]{1,2}\/[0-9]{1,2}-[0-9]{1,2}:[0-9]{1,2}")
         self.re_time = re.compile("[0-9]{1,2}:[0-9]{1,2}")
+        self.every_opt_dict = {"Sunday":0, "Monday":1, "Tuesday":2, "Wednesday":3, "Thursday":4, "Friday":5, "Saturday":6, "day":7}
+        self.sc = sched.scheduler(time.time,time.sleep)
+        self.th = threading.Thread(target=self.report_manager,daemon = True)
+        self.th.start()
+
+    def send_message(self, message, channel):
+        self.sender.chat.post_message(channel, message, as_user=True)
 
     def register_user(self, uid, user_name):
         self.db.register_user(uid, user_name)
@@ -56,13 +71,13 @@ class Controller:
         return dt
 
     def timedelta_to_hhmmss(self, timedel):
-    	hour = timedel.seconds // 3600 + timedel.days * 24
-    	minutes = timedel.seconds % 3600 // 60
-    	seconds = timedel.seconds % 3600 % 60
-    	strmin = str(int(minutes)) if int(minutes) >= 10 else "0" + str(int(minutes))
-    	strsec = str(int(seconds)) if int(seconds) >= 10 else "0" + str(int(seconds))
-    	displayTime = str(int(hour)) + ":" + strmin +  ":" + strsec
-    	return displayTime
+        hour = timedel.seconds // 3600 + timedel.days * 24
+        minutes = timedel.seconds % 3600 // 60
+        seconds = timedel.seconds % 3600 % 60
+        strmin = str(int(minutes)) if int(minutes) >= 10 else "0" + str(int(minutes))
+        strsec = str(int(seconds)) if int(seconds) >= 10 else "0" + str(int(seconds))
+        displayTime = str(int(hour)) + ":" + strmin +  ":" + strsec
+        return displayTime
 
     def list(self, uid, opt):
         term = opt.term
@@ -91,33 +106,6 @@ class Controller:
                     workedtime += diftime
             msg += term + "'s working time: " + self.timedelta_to_hhmmss(workedtime)
             return msg
-
-        ## when -sum is specified
-        dict = {}
-        for row in tasklist:
-            if(row['begin'] is not None and row['finish'] is not None):
-                diftime = self.get_task_time(dt_begin, dt_finish, row['begin'], row['finish'])
-                if(not row['name'] in dict):
-                    dict[row['name']] = diftime
-                else:
-                    dict[row['name']] += diftime
-        for k,v in sorted(dict.items()):
-            msg += k + ": " + self.timedelta_to_hhmmss(v) + "\n"
-            workedtime += v
-        msg += term + "'s working time: " + self.timedelta_to_hhmmss(workedtime)
-        return msg
-
-    def list_for_report(self, uid, term):
-
-        now = datetime.now()
-        d = self.term_to_time_duration(now, term)
-        dt_begin  = d["begin"]
-        dt_finish = d["finish"]
-
-        tasklist = self.db.get_task_list(uid, dt_begin.strftime('%Y/%m/%d %H:%M:%S'), dt_finish.strftime('%Y/%m/%d %H:%M:%S'))
-
-        msg = "\n"
-        workedtime = timedelta(0)
 
         ## when -sum is specified
         dict = {}
@@ -190,5 +178,60 @@ class Controller:
 
         begin_time = task['begin'].strftime('%Y/%m/%d %H:%M:%S')
         return "The latest task is '''" + task['name'] + "''',    " + "begined at " + begin_time
-        
 
+    def report_manager(self):
+        while(True):
+            if(self.sc.empty() == True):
+                self.set_next_reports()
+                self.sc.run()
+
+    def register_report(self, uid, text, opt, channel_id):
+        every = opt.every
+        at = opt.begin
+        command = opt.instraction
+        channel = channel_id
+        result_msg = "I report a result of \"{0}\" at {1} every {2}".format(command, at, every)
+        try:
+            self.list(uid,self.parser.parse_args(shlex.split(command)))
+        except:
+            result_msg = "\"{0}\" is not correct format".format(command)
+            return result_msg
+        try:
+            self.str_to_datetime(at)
+            self.every_opt_dict[every]
+        except:
+            result_msg = "\"{0}\" is not correct format".format(text)
+            return result_msg
+
+        self.db.register_report(uid, every, at, command, channel)
+        return result_msg
+
+    #scheduler.run()終了後，翌日までのタスクリストを入手
+    def set_next_reports(self):
+        current_time = datetime.now()
+        for row in self.db.get_report_list():
+            every_num = self.every_opt_dict[row['every']]
+            target_time = self.str_to_datetime(row['at'])
+            print(target_time)
+            report_id = row['id']
+            #追加条件
+            if every_num == 7:
+                if target_time.time() <= current_time.time():
+                    target_time = target_time + timedelta(days=1)
+                    self.sc.enterabs(target_time.timestamp(), 1, self.send_report, argument=(str(report_id)))
+                else:
+                    self.sc.enterabs(target_time.timestamp(), 1, self.send_report, argument=(str(report_id)))
+
+            elif every_num == current_time.weekday() and current_time.time() < target_time.time():
+                self.sc.enterabs(target_time.timestamp(), 1, self.send_report, argument=(str(report_id)))
+
+            elif every_num == current_time.weekday() + 1:
+                target_time = target_time + timedelta(days=1)
+                self.sc.enterabs(target_time.timestamp(), 1, self.send_report, argument=(str(report_id)))
+
+    def send_report(self,r_id = 1):
+        for row in self.db.get_report_list():
+            if row['id'] == r_id:
+                task_report = self.list(row['uid'], self.parser.parse_args(row['command'].split()))
+                self.sender.chat.post_message(row['channel'], "----{0}'s report. id:{1}----{2}".format(row['name'],r_id, task_report), as_user=True)
+        print("send report test. the id is>",r_id)
