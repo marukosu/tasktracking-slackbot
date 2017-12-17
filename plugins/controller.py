@@ -236,3 +236,11 @@ class Controller:
         tmp_sc = sched.scheduler(time.time,time.sleep)
         tmp_sc.enter(start_time, 1, self.send_report, argument=(str(r_id),))
         tmp_sc.run()
+
+    def show_reports(self, uid):
+        reports = self.db.get_report_list(uid)
+        msg = "{0} reports\n".format(reports[0]['name'])
+        for row in reports:
+            msg += "id:{0} every:{1} at:{2}\n".format(row['id'],row['every'],row['at'])
+
+        return msg

@@ -14,7 +14,7 @@ parser.add_argument('-finish', help='finish time', default='')
 parser.add_argument('-edit', help='edit number', default='')
 parser.add_argument('-term', help='term (today(default), yesterday, week)', default='')
 parser.add_argument('-sum', help='summalize flag', action='store_true')
-parser.add_argument('-EVERY', help='repeat interval', default='')
+parser.add_argument('-every', help='repeat interval', default='')
 parser.add_argument('-instraction', help='instraction(sub command with options)', default='')
 
 test_flag = 0
@@ -28,6 +28,12 @@ def add_report(msg):
     options = parser.parse_args(shlex.split(text))
     result_msg = ct.register_report(uid, text, options, msg.body['channel'])
     msg.reply(result_msg)
+
+@listen_to(r"^showReports")
+def show_reports(msg):
+    uid = msg.body['user']
+    ret = ct.show_reports(uid)
+    msg.reply(ret)
 
 #ユーザー登録処理
 @respond_to(r"^register me")
@@ -80,8 +86,9 @@ def show_help(msg):
         ["begin(b) taskname [-b time]        ", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["finish(f) taskname [-f time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["list(l) [-sum] [-t today|yesterday|week] ", "指定した日の登録したタスク一覧を表示"],
-        ["now                      ", "直近の終了していなタスクの表示"],
-        ["@bot addReport         ", "レポート要求を追加します"],
+        ["now                      ", "直近の終了していないタスクの表示"],
+        ["@bot addReport [-b time] [-every day|Monday-Sunday] [-i command] ", "commandで取得できるタスク一覧を指定した時刻に投稿するレポート要求を追加"],
+        ["showReports      ", "自分が登録しているレポート要求一覧の表示"],
     ]
     ret = "\n"
     for c in commands:
