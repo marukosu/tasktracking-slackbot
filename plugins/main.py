@@ -22,7 +22,6 @@ parser.add_argument('-instraction', help='instraction(sub command with options)'
 
 test_flag = 1
 ct = Controller(test_flag, parser)
-ct.send_report()
 
 @listen_to(r"^testbot-test")
 def test_func(msg):

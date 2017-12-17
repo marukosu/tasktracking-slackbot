@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from plugins.storage import MySQL
 from slacker import Slacker
 import slackbot_settings
+from crontab import CronTab
 import re
 import threading
 import sched
@@ -21,6 +22,7 @@ class Controller:
         self.sc = sched.scheduler(time.time,time.sleep)
         self.th = threading.Thread(target=self.report_manager,daemon = True)
         self.th.start()
+        self.next_report_time = 86400
 
     def send_message(self, message, channel):
         self.sender.chat.post_message(channel, message, as_user=True)
@@ -202,36 +204,41 @@ class Controller:
         except:
             result_msg = "\"{0}\" is not correct format".format(text)
             return result_msg
+        r_id = str(self.db.register_report(uid, every, at, command, channel))
+        print("the report ID>",r_id)
 
-        self.db.register_report(uid, every, at, command, channel)
+        start_time = self.get_start_time(every,at)
+        if start_time < self.next_report_time - time.time():
+            print("add reports")
+            print(self.sc.queue)
+            self.sc.enter(start_time, 1, self.send_report, argument = str(r_id))
+
         return result_msg
 
-    #scheduler.run()終了後，翌日までのタスクリストを入手
+    #scheduler.run()終了後，24時間後までのタスクリストを入手
     def set_next_reports(self):
-        current_time = datetime.now()
+        max_delay = 0
         for row in self.db.get_report_list():
-            every_num = self.every_opt_dict[row['every']]
-            target_time = self.str_to_datetime(row['at'])
-            print(target_time)
+            start_time = self.get_start_time(row['every'],row['at'])
             report_id = row['id']
-            #追加条件
-            if every_num == 7:
-                if target_time.time() <= current_time.time():
-                    target_time = target_time + timedelta(days=1)
-                    self.sc.enterabs(target_time.timestamp(), 1, self.send_report, argument=(str(report_id)))
-                else:
-                    self.sc.enterabs(target_time.timestamp(), 1, self.send_report, argument=(str(report_id)))
+            if start_time <= 86400:
+                self.sc.enter(start_time, 1, self.send_report, argument=(str(report_id)))
+                max_delay = start_time if start_time > max_delay else start_time
+        self.next_report_time = time.time() + max_delay
 
-            elif every_num == current_time.weekday() and current_time.time() < target_time.time():
-                self.sc.enterabs(target_time.timestamp(), 1, self.send_report, argument=(str(report_id)))
+    #与えられた条件までの秒数を返します
+    def get_start_time(self, every, at):
+        target_dow = self.every_opt_dict[every]
+        target_time = self.str_to_datetime(at)
+        if target_dow == 7:
+            cron_format = "{0} {1} * * *".format(target_time.minute, target_time.hour)
+        else:
+            cron_format = "{0} {1} * * {2}".format(target_time.minute, target_time.hour, target_dow)
 
-            elif every_num == current_time.weekday() + 1:
-                target_time = target_time + timedelta(days=1)
-                self.sc.enterabs(target_time.timestamp(), 1, self.send_report, argument=(str(report_id)))
+        return CronTab(cron_format).next()
 
-    def send_report(self,r_id = 1):
+    def send_report(self,r_id):
         for row in self.db.get_report_list():
             if row['id'] == r_id:
                 task_report = self.list(row['uid'], self.parser.parse_args(row['command'].split()))
                 self.sender.chat.post_message(row['channel'], "----{0}'s report. id:{1}----{2}".format(row['name'],r_id, task_report), as_user=True)
-        print("send report test. the id is>",r_id)
