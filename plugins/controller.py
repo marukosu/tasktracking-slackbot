@@ -3,9 +3,9 @@ from datetime import datetime, timedelta
 from plugins.storage import MySQL
 from slacker import Slacker
 import slackbot_settings
+import threading
 from crontab import CronTab
 import re
-import threading
 import sched
 import time
 import shlex
@@ -18,14 +18,10 @@ class Controller:
         self.re_ydt  = re.compile("[0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}-[0-9]{1,2}:[0-9]{1,2}")
         self.re_dt   = re.compile("[0-9]{1,2}\/[0-9]{1,2}-[0-9]{1,2}:[0-9]{1,2}")
         self.re_time = re.compile("[0-9]{1,2}:[0-9]{1,2}")
-        self.every_opt_dict = {"Sunday":0, "Monday":1, "Tuesday":2, "Wednesday":3, "Thursday":4, "Friday":5, "Saturday":6, "day":7}
+        self.dow = {"Sunday":0, "Monday":1, "Tuesday":2, "Wednesday":3, "Thursday":4, "Friday":5, "Saturday":6, "day":7}
         self.sc = sched.scheduler(time.time,time.sleep)
-        self.th = threading.Thread(target=self.report_manager,daemon = True)
+        self.th = threading.Thread(target=self.reporter, daemon=True)
         self.th.start()
-        self.next_report_time = 86400
-
-    def send_message(self, message, channel):
-        self.sender.chat.post_message(channel, message, as_user=True)
 
     def register_user(self, uid, user_name):
         self.db.register_user(uid, user_name)
@@ -181,12 +177,6 @@ class Controller:
         begin_time = task['begin'].strftime('%Y/%m/%d %H:%M:%S')
         return "The latest task is '''" + task['name'] + "''',    " + "begined at " + begin_time
 
-    def report_manager(self):
-        while(True):
-            if(self.sc.empty() == True):
-                self.set_next_reports()
-                self.sc.run()
-
     def register_report(self, uid, text, opt, channel_id):
         every = opt.every
         at = opt.begin
@@ -200,35 +190,31 @@ class Controller:
             return result_msg
         try:
             self.str_to_datetime(at)
-            self.every_opt_dict[every]
+            self.dow[every]
         except:
             result_msg = "\"{0}\" is not correct format".format(text)
             return result_msg
         r_id = str(self.db.register_report(uid, every, at, command, channel))
-        print("the report ID>",r_id)
-
         start_time = self.get_start_time(every,at)
-        if start_time < self.next_report_time - time.time():
-            print("add reports")
-            print(self.sc.queue)
-            self.sc.enter(start_time, 1, self.send_report, argument = str(r_id))
+        if start_time < self.get_next_update_time():
+            th = threading.Thread(target=self.set_tmp_scheduler, daemon = True, args =(start_time, r_id))
+            th.start()
 
         return result_msg
 
-    #scheduler.run()終了後，24時間後までのタスクリストを入手
-    def set_next_reports(self):
-        max_delay = 0
+    def reporter(self):
+        update_time = self.get_next_update_time()
         for row in self.db.get_report_list():
             start_time = self.get_start_time(row['every'],row['at'])
             report_id = row['id']
-            if start_time <= 86400:
+            if start_time <= update_time:
                 self.sc.enter(start_time, 1, self.send_report, argument=(str(report_id)))
-                max_delay = start_time if start_time > max_delay else start_time
-        self.next_report_time = time.time() + max_delay
+        self.sc.enter(update_time, 1, self.reporter)
+        self.sc.run()
 
     #与えられた条件までの秒数を返します
     def get_start_time(self, every, at):
-        target_dow = self.every_opt_dict[every]
+        target_dow = self.dow[every]
         target_time = self.str_to_datetime(at)
         if target_dow == 7:
             cron_format = "{0} {1} * * *".format(target_time.minute, target_time.hour)
@@ -239,6 +225,14 @@ class Controller:
 
     def send_report(self,r_id):
         for row in self.db.get_report_list():
-            if row['id'] == r_id:
+            if str(row['id']) == r_id:
                 task_report = self.list(row['uid'], self.parser.parse_args(row['command'].split()))
                 self.sender.chat.post_message(row['channel'], "----{0}'s report. id:{1}----{2}".format(row['name'],r_id, task_report), as_user=True)
+
+    def get_next_update_time(self):
+        return CronTab("0 0 * * *").next()
+
+    def set_tmp_scheduler(self, start_time, r_id):
+        tmp_sc = sched.scheduler(time.time,time.sleep)
+        tmp_sc.enter(start_time, 1, self.send_report, argument=(str(r_id),))
+        tmp_sc.run()

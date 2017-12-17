@@ -71,7 +71,6 @@ class MySQL:
         ret = conn.execute(s, u=uid, e=every, a=at, c=command, ch=channel)
         return ret.lastrowid
 
-
     def get_report_list(self, uid = None):
         conn = self.engine.connect()
         if uid == None:

@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 import argparse
-import threading
 from slackbot.bot import respond_to     # @botname: で反応するデコーダ
 from slackbot.bot import listen_to      # チャネル内発言で反応するデコーダ
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
-from datetime import datetime, timedelta
 from plugins.controller import Controller
-import time
 import shlex
 
 parser = argparse.ArgumentParser(prog='task')
@@ -17,15 +14,12 @@ parser.add_argument('-finish', help='finish time', default='')
 parser.add_argument('-edit', help='edit number', default='')
 parser.add_argument('-term', help='term (today(default), yesterday, week)', default='')
 parser.add_argument('-sum', help='summalize flag', action='store_true')
-parser.add_argument('-every', help='repeat interval', default='')
+parser.add_argument('-EVERY', help='repeat interval', default='')
 parser.add_argument('-instraction', help='instraction(sub command with options)', default='')
 
-test_flag = 1
+test_flag = 0
 ct = Controller(test_flag, parser)
 
-@listen_to(r"^testbot-test")
-def test_func(msg):
-    msg.reply("Hello, this is test func")
 
 @respond_to(r"^addReport")
 def add_report(msg):
