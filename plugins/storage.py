@@ -65,3 +65,20 @@ class MySQL:
         task = conn.execute(s, u=uid, l=limit).fetchone()
         return task
 
+    def register_report(self, uid, every, at, command, channel):
+        conn = self.engine.connect()
+        s = text("INSERT INTO reports (uid, every, at, command, channel) VALUES (:u, :e, :a, :c, :ch)")
+        ret = conn.execute(s, u=uid, e=every, a=at, c=command, ch=channel)
+        return ret.lastrowid
+
+    def get_report_list(self, uid = None):
+        conn = self.engine.connect()
+        if uid == None:
+            s = text("SELECT r.id, r.uid, u.name, r.every, r.at, r.command, r.channel, r.created_at, r.updated_at FROM reports r INNER JOIN users u ON r.uid = u.id ORDER BY u.name ASC")
+            reports = conn.execute(s).fetchall()
+        else:
+            s = text("SELECT r.id, r.uid, u.name, r.every, r.at, r.command, r.channel, r.created_at, r.updated_at FROM reports r INNER JOIN users u ON r.uid = u.id WHERE u.id = :u ORDER BY r.id ASC")
+            reports = conn.execute(s, u=uid).fetchall()
+
+        return reports
+

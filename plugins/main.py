@@ -1,17 +1,10 @@
 # -*- coding: utf-8 -*-
 import argparse
-import threading
 from slackbot.bot import respond_to     # @botname: で反応するデコーダ
 from slackbot.bot import listen_to      # チャネル内発言で反応するデコーダ
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
-from datetime import datetime, timedelta
 from plugins.controller import Controller
-from plugins.reporter import Reporter
-import time
-
-test_flag = 0
-ct = Controller(test_flag)
-rp = Reporter(ct)
+import shlex
 
 parser = argparse.ArgumentParser(prog='task')
 parser.add_argument('command', help='sub command value', default='')
@@ -21,38 +14,26 @@ parser.add_argument('-finish', help='finish time', default='')
 parser.add_argument('-edit', help='edit number', default='')
 parser.add_argument('-term', help='term (today(default), yesterday, week)', default='')
 parser.add_argument('-sum', help='summalize flag', action='store_true')
-parser.add_argument('-repeat', help='repeat time', default='')
+parser.add_argument('-every', help='repeat interval', default='')
+parser.add_argument('-instraction', help='instraction(sub command with options)', default='')
 
-#日毎と週ごとのタスクトラッキングデータを出力（今後dayとweekで分けても良い）
-@respond_to(r"^startReport|^stopReport|^stopAllReport")
-def cron_report(msg):
+test_flag = 0
+ct = Controller(test_flag, parser)
+
+
+@respond_to(r"^addReport")
+def add_report(msg):
     uid = msg.body['user']
     text = msg.body['text']
-    #将来,contorollerのlist_for_reportではなくlistを使用し
-    #optionsによってユーザーごとにタスクの集計範囲を分ける可能性があります
-    #options = parser.parse_args(text.split())
-    if text == "startReport":
-        rep = rp.add_user(uid,msg)
-        msg.reply(rep)
-    elif text == "stopReport":
-        rep = rp.remove_user(uid)
-        msg.reply(rep)
-    elif text == "stopAllReport":
-        rp.stop_report(msg)
+    options = parser.parse_args(shlex.split(text))
+    result_msg = ct.register_report(uid, text, options, msg.body['channel'])
+    msg.reply(result_msg)
 
-def cronlissner(msg):
+@listen_to(r"^showReports")
+def show_reports(msg):
     uid = msg.body['user']
-    options = parser.parse_args(["l"])
-    ret = ct.list(uid, options)
+    ret = ct.show_reports(uid)
     msg.reply(ret)
-    t=threading.Timer(60,cronlissner, args = (msg,))
-    t.start()
-
-#cron処理
-@listen_to(r"^cron me")
-def cron(msg):
-    t=threading.Thread(target=cronlissner,args=(msg,))
-    t.start()
 
 #ユーザー登録処理
 @respond_to(r"^register me")
@@ -105,10 +86,9 @@ def show_help(msg):
         ["begin(b) taskname [-b time]        ", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["finish(f) taskname [-f time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["list(l) [-sum] [-t today|yesterday|week] ", "指定した日の登録したタスク一覧を表示"],
-        ["now                      ", "直近の終了していなタスクの表示"],
-        ["@bot startReport         ", "毎日23:55にその日の登録されたタスクデータを投稿する．日曜日は週報も投稿する"],
-        ["@bot stopReport          ", "タスクデータの定期投稿を停止する"],
-        ["@bot stopAllReport          ", "全ユーザーのタスクデータの定期投稿を停止する（停止すべきユーザーが操作できない場合）"]
+        ["now                      ", "直近の終了していないタスクの表示"],
+        ["@bot addReport [-b time] [-every day|Monday-Sunday] [-i command] ", "commandで取得できるタスク一覧を指定した時刻に投稿するレポート要求を追加"],
+        ["showReports      ", "自分が登録しているレポート要求一覧の表示"],
     ]
     ret = "\n"
     for c in commands:
