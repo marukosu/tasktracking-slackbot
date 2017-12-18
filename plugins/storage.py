@@ -77,8 +77,8 @@ class MySQL:
             s = text("SELECT r.id, r.uid, u.name, r.every, r.at, r.command, r.channel, r.created_at, r.updated_at FROM reports r INNER JOIN users u ON r.uid = u.id ORDER BY u.name ASC")
             reports = conn.execute(s).fetchall()
         else:
-            s = text("SELECT r.id, r.uid, u.name, r.every, r.at, r.channel, r.created_at, r.updated_at FROM reports r INNER JOIN users u ON r.uid = u.id WHERE u.id = uid ORDER BY r.id ASC")
-            reports = conn.execute(s).fetchall()
+            s = text("SELECT r.id, r.uid, u.name, r.every, r.at, r.command, r.channel, r.created_at, r.updated_at FROM reports r INNER JOIN users u ON r.uid = u.id WHERE u.id = :u ORDER BY r.id ASC")
+            reports = conn.execute(s, u=uid).fetchall()
 
         return reports
 

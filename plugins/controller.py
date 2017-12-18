@@ -18,7 +18,7 @@ class Controller:
         self.re_ydt  = re.compile("[0-9]{4}\/[0-9]{1,2}\/[0-9]{1,2}-[0-9]{1,2}:[0-9]{1,2}")
         self.re_dt   = re.compile("[0-9]{1,2}\/[0-9]{1,2}-[0-9]{1,2}:[0-9]{1,2}")
         self.re_time = re.compile("[0-9]{1,2}:[0-9]{1,2}")
-        self.dow = {"Sunday":0, "Monday":1, "Tuesday":2, "Wednesday":3, "Thursday":4, "Friday":5, "Saturday":6, "day":7}
+        self.dow = {"Sun":0, "Mon":1, "Tue":2, "Wed":3, "Thu":4, "Fri":5, "Sat":6, "day":7}
         self.sc = sched.scheduler(time.time,time.sleep)
         self.th = threading.Thread(target=self.reporter, daemon=True)
         self.th.start()
@@ -241,6 +241,6 @@ class Controller:
         reports = self.db.get_report_list(uid)
         msg = "{0} reports\n".format(reports[0]['name'])
         for row in reports:
-            msg += "id:{0} every:{1} at:{2}\n".format(row['id'],row['every'],row['at'])
+            msg += "id:{0}, every:{1}, at:{2}, command: <{3}>\n".format(row['id'],row['every'],row['at'],row['command'])
 
         return msg
