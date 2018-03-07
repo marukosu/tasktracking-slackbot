@@ -2,6 +2,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
+
 class MySQL:
     def __init__(self, test):
         if test == 1:
@@ -16,7 +17,7 @@ class MySQL:
         self.engine = create_engine(
             "mysql://root:root@localhost/slack?charset=utf8",
             encoding='utf-8',
-            echo=True,
+            echo=False,
             pool_size=10,
             pool_recycle=1000,
         )
@@ -25,8 +26,6 @@ class MySQL:
         conn = self.engine.connect()
         s = text("SELECT id, name FROM users")
         rows = conn.execute(s).fetchall()
-        for row in rows:
-            print("ID:" + str(row['id']) + "  NAME:" + row['name'])
 
     def register_user(self, id, name):
         conn = self.engine.connect()
@@ -55,8 +54,6 @@ class MySQL:
         s = text("SELECT name, begin, finish FROM tasks WHERE uid = :u AND finish > :f AND (begin < :t OR finish IS NULL)")
         tasklist = conn.execute(s, u=uid, f=fromTime, t=toTime).fetchall()
 
-        for row in tasklist:
-            print("Name:" + row['name'] + "  begin:" + str(row['begin']) + "  finish:" + str(row['finish']))
         return tasklist
 
     def get_current_task(self, uid, limit):
@@ -81,4 +78,3 @@ class MySQL:
             reports = conn.execute(s, u=uid).fetchall()
 
         return reports
-

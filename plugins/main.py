@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-import argparse
 from slackbot.bot import respond_to     # @botname: で反応するデコーダ
 from slackbot.bot import listen_to      # チャネル内発言で反応するデコーダ
 from slackbot.bot import default_reply  # 該当する応答がない場合に反応するデコーダ
 from plugins.controller import Controller
 import shlex
+import argparse
 
 parser = argparse.ArgumentParser(prog='task')
 parser.add_argument('command', help='sub command value', default='')
@@ -19,7 +19,6 @@ parser.add_argument('-instraction', help='instraction(sub command with options)'
 
 test_flag = 0
 ct = Controller(test_flag, parser)
-
 
 @respond_to(r"^addReport")
 def add_report(msg):
@@ -82,16 +81,17 @@ def show_current_task(msg):
 @listen_to(r"^help$")
 def show_help(msg):
     commands = [
-        ["@bot register me         ", "コメントしたチャンネルでbotを使うことを宣言する"],
-        ["begin(b) taskname [-b time]        ", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
-        ["finish(f) taskname [-f time]        ", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
-        ["list(l) [-sum] [-t today|yesterday|week] ", "指定した日の登録したタスク一覧を表示"],
-        ["now                      ", "直近の終了していないタスクの表示"],
+        ["@bot register me", "コメントしたチャンネルでbotを使うことを宣言する"],
         ["@bot addReport [-b time] [-every day|Monday-Sunday] [-i command] ", "commandで取得できるタスク一覧を指定した時刻に投稿するレポート要求を追加"],
-        ["showReports      ", "自分が登録しているレポート要求一覧の表示"],
+        ["begin(b) taskname [-b time]", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
+        ["finish(f) taskname [-f time]", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
+        ["list(l) [-sum] [-t today|yesterday|week]", "指定した日の登録したタスク一覧を表示"],
+        ["now", "直近の終了していないタスクの表示"],
+        ["showReports", "自分が登録しているレポート要求一覧の表示"],
+        ["help", "helpの表示"],
     ]
     ret = "\n"
     for c in commands:
-        ret += c[0] + "-- " + c[1] + "\n"
+        ret += f"```{c[0]}-- {c[1]}```\n"
     msg.reply(ret)
 
