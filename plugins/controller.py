@@ -222,7 +222,7 @@ class Controller:
         else:
             cron_format = "{0} {1} * * {2}".format(target_time.minute, target_time.hour, target_dow)
 
-        return CronTab(cron_format).next(default_utc=True)
+        return CronTab(cron_format).next(default_utc=False)
 
     def send_report(self,r_id):
         for row in self.db.get_report_list():
@@ -231,7 +231,7 @@ class Controller:
                 self.sender.chat.post_message(row['channel'], "----{0}'s report. id:{1}----{2}".format(row['name'],r_id, task_report), as_user=True)
 
     def get_next_update_time(self):
-        return CronTab("0 0 * * *").next(default_utc=True)
+        return CronTab("0 0 * * *").next(default_utc=False)
 
     def set_tmp_scheduler(self, start_time, r_id):
         tmp_sc = sched.scheduler(time.time,time.sleep)
