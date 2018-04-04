@@ -163,10 +163,10 @@ class Controller:
             return "Failed to convert specified time to datetime"
 
         result, begin_time = self.db.finish_task(uid, task_name, dt)
-        elappsed_time = dt - begin_time
+        elapsed_time = dt - begin_time
 
         if(result == 0):
-            return task_name + "を終了" + "　所要時間: " + self.timedelta_to_hhmmss(elappsed_time)
+            return task_name + "を終了" + "　所要時間: " + self.timedelta_to_hhmmss(elapsed_time)
         else:
             return "終了処理が追加できませんでした（userがない，タスク名がない，時刻がおかしい,etc...）"
 
