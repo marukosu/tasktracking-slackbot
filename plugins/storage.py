@@ -39,15 +39,16 @@ class MySQL:
 
     def finish_task(self, uid, taskName, finishTime):
         conn = self.engine.connect()
-        s = text("SELECT id FROM tasks WHERE uid = :u AND name = :n AND finish is NULL ORDER BY id DESC LIMIT 1")
+        s = text("SELECT id, begin FROM tasks WHERE uid = :u AND name = :n AND finish is NULL ORDER BY id DESC LIMIT 1")
         task = conn.execute(s, u=uid, n=taskName).fetchone()
         if task is None:
             return -1
         id = task['id']
+        begin_time = task['begin']
         s = text("UPDATE tasks SET finish = :e WHERE id = :i")
         conn.execute(s, e=finishTime, i=id)
 
-        return 0
+        return 0, begin_time
 
     def get_task_list(self, uid, fromTime, toTime):
         conn = self.engine.connect()

@@ -155,17 +155,18 @@ class Controller:
             task_name = task['name']
 
         if opt.finish == '':
-            dt = datetime.fromtimestamp(float(ts)).strftime('%Y/%m/%d %H:%M:%S')
+            dt = datetime.fromtimestamp(float(ts))
         else:
             dt = self.str_to_datetime(opt.finish)
 
         if dt == None:
             return "Failed to convert specified time to datetime"
 
-        result = self.db.finish_task(uid, task_name, dt)
+        result, begin_time = self.db.finish_task(uid, task_name, dt)
+        elapsed_time = dt - begin_time
 
         if(result == 0):
-            return task_name + "を終了"
+            return task_name + "を終了" + "　所要時間: " + self.timedelta_to_hhmmss(elapsed_time)
         else:
             return "終了処理が追加できませんでした（userがない，タスク名がない，時刻がおかしい,etc...）"
 
