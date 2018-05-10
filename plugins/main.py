@@ -82,7 +82,7 @@ def show_current_task(msg):
 def show_help(msg):
     commands = [
         ["@bot register me", "コメントしたチャンネルでbotを使うことを宣言する"],
-        ["@bot addReport [-b time] [-every day|Monday-Sunday] [-i command] ", "commandで取得できるタスク一覧を指定した時刻に投稿するレポート要求を追加"],
+        ["@bot addReport [-b time] [-every day|Mon-Sun] [-i command] ", "commandで取得できるタスク一覧を指定した時刻に投稿するレポート要求を追加"],
         ["begin(b) taskname [-b time]", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["finish(f) taskname [-f time]", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["list(l) [-sum] [-t today|yesterday|week]", "指定した日の登録したタスク一覧を表示"],
