@@ -63,6 +63,12 @@ class MySQL:
         task = conn.execute(s, u=uid, l=limit).fetchone()
         return task
 
+    def get_latest_task_list(self, uid, task_number):
+        conn = self.engine.connect()
+        s = text("SELECT name, id, begin, finish FROM tasks WHERE uid = :u ORDER BY begin DESC LIMIT " + str(task_number))
+        task_list = conn.execute(s, u=uid).fetchall()
+        return task_list
+
     def register_report(self, uid, every, at, command, channel):
         conn = self.engine.connect()
         s = text("INSERT INTO reports (uid, every, at, command, channel) VALUES (:u, :e, :a, :c, :ch)")
