@@ -69,6 +69,12 @@ class MySQL:
         task_list = conn.execute(s, u=uid).fetchall()
         return task_list
 
+    def delete_task(self, uid, target):
+        conn = self.engine.connect()
+        s = text("DELETE FROM tasks WHERE uid = :u AND id = :i")
+        conn.execute(s,u=uid, i=target)
+        return 1
+
     def register_report(self, uid, every, at, command, channel):
         conn = self.engine.connect()
         s = text("INSERT INTO reports (uid, every, at, command, channel) VALUES (:u, :e, :a, :c, :ch)")

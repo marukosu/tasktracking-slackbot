@@ -84,6 +84,21 @@ def show_task(msg):
     ret = ct.show_task(uid, task_number)
     msg.reply(ret)
 
+@listen_to(r"^deleteTask")
+def show_task(msg):
+    uid = msg.body['user']
+    text = msg.body['text']
+    target = text.split()[1]
+    try:
+        int(target)
+    except:
+        ret = "delete target(id) must be int"
+        msg.reply(ret)
+        return -1
+    ret = ct.delete_task(uid, target)
+    msg.reply(ret)
+
+
 
 # 最新の終了していないタスクの表示
 @listen_to(r"^now$")
@@ -104,6 +119,7 @@ def show_help(msg):
         ["now", "直近の終了していないタスクの表示"],
         ["showReports", "自分が登録しているレポート要求一覧の表示"],
         ["showTask [int:number]", "[number]個の最近終了したタスクの情報をid込みで表示"],
+        ["deleteTask [int:target]", "idが[targe]のタスクをデータベースから削除（自分が登録したタスクのみ削除可能）"],
         ["help", "helpの表示"],
     ]
     ret = "\n"

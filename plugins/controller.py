@@ -187,7 +187,11 @@ class Controller:
         for row in latest_task_list:
             msg += "id:" + str(row['id']) + " " + row['name'] + "\n" + row['begin'].strftime('%Y/%m/%d %H:%M:%S') +\
                    "~" + row['finish'].strftime('%Y/%m/%d %H:%M:%S') + "\n"
+        return msg
 
+    def delete_task(self, uid, target):
+        self.db.delete_task(uid, target)
+        msg = "delete the task with ID:" + target
         return msg
 
     def register_report(self, uid, text, opt, channel_id):
