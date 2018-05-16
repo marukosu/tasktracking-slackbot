@@ -181,6 +181,19 @@ class Controller:
         begin_time = task['begin'].strftime('%Y/%m/%d %H:%M:%S')
         return "The latest task is '''" + task['name'] + "''',    " + "begined at " + begin_time
 
+    def show_task(self,uid,task_number):
+        latest_task_list = self.db.get_latest_task_list(uid, task_number)
+        msg = "\n"
+        for row in latest_task_list:
+            msg += "id:" + str(row['id']) + " " + row['name'] + "\n" + row['begin'].strftime('%Y/%m/%d %H:%M:%S') +\
+                   "~" + row['finish'].strftime('%Y/%m/%d %H:%M:%S') + "\n"
+        return msg
+
+    def delete_task(self, uid, target):
+        self.db.delete_task(uid, target)
+        msg = "delete the task with ID:" + target
+        return msg
+
     def register_report(self, uid, text, opt, channel_id):
         every = opt.every
         at = opt.begin
