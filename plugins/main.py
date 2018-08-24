@@ -34,6 +34,20 @@ def show_reports(msg):
     ret = ct.show_reports(uid)
     msg.reply(ret)
 
+@listen_to(r"^deleteReport")
+def delete_report(msg):
+    uid = msg.body['user']
+    text = msg.body['text']
+    target = text.split()[1]
+    try:
+        int(target)
+    except:
+        ret = "delete report(id) must be int"
+        msg.reply(ret)
+        return -1
+    ret = ct.delete_report(uid, target)
+    msg.reply(ret)
+
 #ユーザー登録処理
 @respond_to(r"^register me")
 def register(msg):
@@ -85,7 +99,7 @@ def show_task(msg):
     msg.reply(ret)
 
 @listen_to(r"^deleteTask")
-def show_task(msg):
+def delete_task(msg):
     uid = msg.body['user']
     text = msg.body['text']
     target = text.split()[1]
@@ -112,14 +126,15 @@ def show_current_task(msg):
 def show_help(msg):
     commands = [
         ["@bot register me", "コメントしたチャンネルでbotを使うことを宣言する"],
-        ["@bot addReport [-b time] [-every day|Mon-Sun] [-i command] ", "commandで取得できるタスク一覧を指定した時刻に投稿するレポート要求を追加"],
         ["begin(b) taskname [-b time]", "tasknameでタスクを開始。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["finish(f) taskname [-f time]", "tasknameのタスクを終了。_12:00のように時間を指定することで時刻を遡って登録可能"],
         ["list(l) [-sum] [-t today|yesterday|week]", "指定した日の登録したタスク一覧を表示"],
         ["now", "直近の終了していないタスクの表示"],
-        ["showReports", "自分が登録しているレポート要求一覧の表示"],
         ["showTask [int:number]", "[number]個の最近終了したタスクの情報をid込みで表示"],
         ["deleteTask [int:target]", "idが[targe]のタスクをデータベースから削除（自分が登録したタスクのみ削除可能）"],
+        ["@bot addReport [-b time] [-every day|Mon-Sun] [-i command] ", "commandで取得できるタスク一覧を指定した時刻に投稿するレポート要求を追加"],
+        ["showReports", "自分が登録しているレポート要求一覧の表示"],
+        ["deleteReport [int:target]", "idが[targe]のレポートをデータベースから削除（自分が登録したレポートのみ削除可能）"],
         ["help", "helpの表示"],
     ]
     ret = "\n"

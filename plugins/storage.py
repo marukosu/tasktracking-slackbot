@@ -91,3 +91,9 @@ class MySQL:
             reports = conn.execute(s, u=uid).fetchall()
 
         return reports
+
+    def delete_report(self, uid, target):
+        conn = self.engine.connect()
+        s = text("DELETE FROM reports WHERE uid = :u AND id = :i")
+        conn.execute(s,u=uid, i=target)
+        return 1

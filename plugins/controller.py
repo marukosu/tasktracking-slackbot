@@ -259,5 +259,9 @@ class Controller:
         msg = "{0} reports\n".format(reports[0]['name'])
         for row in reports:
             msg += "id:{0}, every:{1}, at:{2}, command: <{3}>\n".format(row['id'],row['every'],row['at'],row['command'])
+        return msg
 
+    def delete_report(self, uid, target):
+        self.db.delete_report(uid, target)
+        msg = "delete the report with ID:" + target
         return msg
