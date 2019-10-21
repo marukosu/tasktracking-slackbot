@@ -9,5 +9,5 @@ six==1.11.0
 slackbot==0.5.1
 slacker==0.9.60
 SQLAlchemy==1.2.5
-urllib3==1.22
+urllib3==1.24.2
 websocket-client==0.47.0
